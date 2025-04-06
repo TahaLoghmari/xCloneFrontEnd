@@ -3,20 +3,27 @@ import App from "./App";
 import NewsFeed from "./NewsFeed";
 import Login from "./Login";
 import Register from "./Register";
+import Authentication from "./Authentication";
 
 let router = createBrowserRouter([
   {
-    path: "/login",
-    element: <Login />,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-  {
     path: "/",
     element: <App />,
-    children: [{ path: "/home", element: <NewsFeed /> }],
+    children: [{ path: "home", element: <NewsFeed /> }],
+  },
+  {
+    path: "/auth",
+    element: <Authentication />,
+    children: [
+      {
+        path: "login",
+        element: <Login />,
+      },
+      {
+        path: "signup",
+        element: <Register />,
+      },
+    ],
   },
 ]);
 

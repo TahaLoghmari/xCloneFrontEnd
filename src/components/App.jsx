@@ -3,6 +3,7 @@ import { ModeToggle } from "./mode-toggle";
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Footer from "./Footer";
+import { jwtDecode } from "jwt-decode";
 
 export default function App() {
   const navigate = useNavigate();
@@ -12,19 +13,6 @@ export default function App() {
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        const currentTime = Date.now() / 1000;
-        if (decoded.exp < currentTime) {
-          setAuth(null);
-          localStorage.removeItem("token");
-          navigate("/login");
-          return;
-        }
-        const timeUntilExpiry = (decoded.exp - currentTime) * 1000;
-        const logoutTimer = setTimeout(() => {
-          setAuth(null);
-          localStorage.removeItem("token");
-          navigate("/login");
-        }, timeUntilExpiry);
         console.log("Decoded token:", decoded);
         const userId =
           decoded[
@@ -33,19 +21,19 @@ export default function App() {
         const username = decoded.sub; // This is the JwtRegisteredClaimNames.Sub claim
         setAuth({ userId, username });
         // API Call
+        console.log(Auth);
         navigate("/home");
       } catch (error) {
         setAuth(null);
         console.error("Invalid token:", error);
         localStorage.removeItem("token");
-        navigate("/login");
+        navigate("/auth");
       }
     } else {
       setAuth(null);
       console.error("No token available");
-      navigate("/login");
+      navigate("/auth");
     }
-    return () => clearTimeout(logoutTimer);
   }, []);
 
   return (
