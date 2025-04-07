@@ -13,6 +13,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useContext } from "react";
+import { States } from "./App";
 
 const formSchema = z.object({
   name: z.string().min(3, "Category name must be at least 3 characters"),
@@ -24,6 +26,7 @@ const formSchema = z.object({
     .optional(),
 });
 export default function NewsFeedAddPost({}) {
+  const { Auth } = useContext(States);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", description: "" },
@@ -32,10 +35,10 @@ export default function NewsFeedAddPost({}) {
   const onSubmit = async (formData) => {};
   return (
     <div className="flex w-full border-b p-4">
-      <div className="flex w-full gap-2">
-        <div className="w-[10%]">
+      <div className="flex w-full">
+        <div className="flex w-[10%] flex-col items-center">
           <Avatar>
-            <AvatarImage src="https://github.com/shadcn.png" />
+            <AvatarImage src={Auth.imageUrl} />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
         </div>
@@ -51,7 +54,7 @@ export default function NewsFeedAddPost({}) {
                 <FormItem>
                   <FormControl>
                     <Textarea
-                      className="border-0"
+                      className="border-0 text-xl"
                       placeholder="What's happening?"
                       {...field}
                     />
@@ -76,7 +79,7 @@ export default function NewsFeedAddPost({}) {
               </div>
               <div className="flex h-full items-center justify-end">
                 <Button
-                  className="rounded-full font-semibold opacity-50 transition-all duration-300"
+                  className="rounded-full font-bold opacity-50 transition-all duration-300"
                   type="submit"
                   disabled={form.formState.isSubmitting}
                 >

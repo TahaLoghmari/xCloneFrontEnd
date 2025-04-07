@@ -16,6 +16,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { API_BASE_URL } from "@/lib/api";
+import { useState } from "react";
 
 const formSchema = z.object({
   email: z.string().min(3, "Email must be at least 3 characters"),
@@ -23,12 +25,35 @@ const formSchema = z.object({
 });
 
 export default function Login() {
+  const [authError, setAuthError] = useState(null);
   const navigate = useNavigate();
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", password: "" },
   });
-  const onSubmit = async (formData) => {};
+  const onSubmit = async (formData) => {
+    fetch(`${API_BASE_URL}/Auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        Email: formData.email,
+        Password: formData.password,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok)
+          return res.text().then((message) => {
+            throw new Error(message);
+          });
+        return res.json();
+      })
+      .then((data) => {
+        localStorage.setItem("token", data.token);
+        navigate("/");
+      });
+  };
   return (
     <div className="flex min-h-screen min-w-screen flex-col items-center overflow-y-auto p-3 md:min-h-full md:min-w-full md:p-0">
       <div className="flex w-full items-center">
@@ -65,6 +90,11 @@ export default function Login() {
               onSubmit={form.handleSubmit(onSubmit)}
               className="mb-10 space-y-4"
             >
+              {authError && (
+                <div className="bg-destructive/10 border-destructive text-destructive mb-4 rounded-md border p-3 text-sm">
+                  {authError}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="email"
