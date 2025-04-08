@@ -13,11 +13,17 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useNavigate } from "react-router-dom";
 
 export default function NewsFeedHeader({}) {
+  const navigate = useNavigate();
   const { setFollowing, setForYou, forYou, following } =
     useContext(NewsFeedStates);
   const { Auth } = useContext(States);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/auth");
+  };
   return (
     <div className="border-b px-4 pt-2">
       {/* Avatar - X Logo - Upgrade */}
@@ -68,12 +74,15 @@ export default function NewsFeedHeader({}) {
                     <p className="text-lg font-bold">Settings</p>
                   </div>
                   <div className="text-primary flex items-center justify-start gap-3">
-                    <LogOut className="flex h-7 w-7 items-center justify-center" />
-                    <p className="text-lg font-bold">Log out</p>
-                  </div>
-                  <div className="text-primary flex items-center justify-start gap-3">
                     <Users className="flex h-7 w-7 items-center justify-center" />
                     <p className="text-lg font-bold">Switch account</p>
+                  </div>
+                  <div
+                    className="text-primary flex items-center justify-start gap-3"
+                    onClick={() => handleLogout()}
+                  >
+                    <LogOut className="flex h-7 w-7 items-center justify-center" />
+                    <p className="text-lg font-bold">Log out</p>
                   </div>
                 </div>
               </SheetDescription>

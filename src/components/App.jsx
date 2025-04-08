@@ -3,66 +3,37 @@ import { ModeToggle } from "./mode-toggle";
 import { useEffect, useState, createContext } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Footer from "./Footer";
-import { jwtDecode } from "jwt-decode";
 import SearchNewsFeed from "./SearchNewsFeed";
 import { API_BASE_URL } from "@/lib/api";
 
-export const States = createContext(null);
+export const States = createContext({ Auth: "", setAuth: () => {} });
 export default function App() {
   const navigate = useNavigate();
   const [Auth, setAuth] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(true);
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        if (decoded.exp * 1000 < Date.now()) {
-          localStorage.removeItem("token");
-          navigate("/");
+    fetch(`${API_BASE_URL}/User/current`, {
+      method: "GET",
+      credentials: "include",
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Authentication failed or session expired");
         }
-        const userId =
-          decoded[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
-          ]; // This is the ClaimTypes.NameIdentifier claim
-        const username = decoded.sub; // This is the JwtRegisteredClaimNames.Sub claim
-        // API Call
-        fetch(`${API_BASE_URL}/User/${userId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then((res) => {
-            if (!res.ok)
-              throw new Error(
-                "An error occured while getting user informations",
-              );
-            return res.json();
-          })
-          .then((data) => {
-            setAuth(data);
-            setLoading(false);
-          })
-          .catch((error) => {
-            console.error("Error fetching user data:", error);
-            setAuth(null);
-            setLoading(false);
-            localStorage.removeItem("token");
-            navigate("/auth");
-          });
-      } catch (error) {
+        return res.json();
+      })
+      .then((data) => {
+        setAuth(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching user data:", error);
         setAuth(null);
-        console.error("Invalid token:", error);
-        localStorage.removeItem("token");
+        setLoading(false);
         navigate("/auth");
-      }
-    } else {
-      setAuth(null);
-      console.error("No token available");
-      navigate("/auth");
-    }
-  }, []);
+      });
+  }, [navigate]);
   useEffect(() => {
     if (!loading && Auth) {
       navigate("/home");
@@ -83,7 +54,8 @@ export default function App() {
         </div>
       </ThemeProvider>
     );
-  if (!loading && Auth)
+  if (!loading && Auth) {
+    document.title = "Home";
     return (
       <ThemeProvider defaultTheme="dark">
         <States.Provider value={{ Auth, setAuth }}>
@@ -96,4 +68,5 @@ export default function App() {
         </States.Provider>
       </ThemeProvider>
     );
+  }
 }

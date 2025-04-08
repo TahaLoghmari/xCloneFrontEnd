@@ -4,6 +4,7 @@ import NewsFeed from "./NewsFeed";
 import Login from "./Login";
 import Register from "./Register";
 import Authentication from "./Authentication";
+import OAuthCallback from "./OAuthCallback";
 
 let router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ let router = createBrowserRouter([
         path: "signup",
         element: <Register />,
       },
+      { path: "callback", element: <OAuthCallback /> },
     ],
   },
 ]);

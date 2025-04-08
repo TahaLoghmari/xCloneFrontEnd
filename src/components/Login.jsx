@@ -32,27 +32,26 @@ export default function Login() {
     defaultValues: { email: "", password: "" },
   });
   const onSubmit = async (formData) => {
-    fetch(`${API_BASE_URL}/Auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        Email: formData.email,
-        Password: formData.password,
-      }),
-    })
-      .then((res) => {
-        if (!res.ok)
-          return res.text().then((message) => {
-            throw new Error(message);
-          });
-        return res.json();
-      })
-      .then((data) => {
-        localStorage.setItem("token", data.token);
-        navigate("/");
+    try {
+      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          Email: formData.email,
+          Password: formData.password,
+        }),
       });
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(errorMessage);
+      }
+      navigate("/");
+    } catch (error) {
+      setAuthError(`${error.message}. Please try again.`);
+    }
   };
   return (
     <div className="flex min-h-screen min-w-screen flex-col items-center overflow-y-auto p-3 md:min-h-full md:min-w-full md:p-0">

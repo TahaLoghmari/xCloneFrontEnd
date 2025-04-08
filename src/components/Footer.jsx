@@ -5,6 +5,11 @@ import { useContext } from "react";
 import { States } from "./App";
 import { useNavigate } from "react-router-dom";
 import { User } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function Footer({}) {
   const navigate = useNavigate();
@@ -17,8 +22,8 @@ export default function Footer({}) {
   return (
     <>
       <div className="2sm:w-20 fixed bottom-0 flex w-full items-center justify-between overflow-x-auto overflow-y-auto border-t p-4 sm:h-full sm:w-17 sm:flex-col sm:border-r sm:p-2 2xl:min-h-screen 2xl:w-70 2xl:items-start 2xl:px-6 2xl:pb-6">
-        <div className="flex w-full items-center justify-between sm:mb-6 sm:flex-col sm:justify-start sm:gap-8 2xl:mb-0 2xl:h-screen 2xl:items-start">
-          <div className="hidden items-center md:flex">
+        <div className="flex w-full items-center justify-between sm:mb-6 sm:flex-col sm:justify-start sm:gap-8 2xl:mb-0 2xl:items-start">
+          <div className="hidden items-center sm:flex">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 30 30"
@@ -96,33 +101,48 @@ export default function Footer({}) {
             Post
           </Button>
         </div>
-        <div
-          className="hidden sm:block 2xl:mt-2 2xl:flex 2xl:w-full 2xl:items-center 2xl:justify-between"
-          onClick={() => handleLogout()}
-        >
-          <div className="2xl:flex 2xl:items-center 2xl:gap-3">
-            <Avatar className="h-10 w-10">
-              <AvatarImage
-                src={Auth?.imageUrl || "/path/to/default/image.png"}
-              />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <div className="hidden 2xl:block">
-              <p>{Auth.username}</p>
-              <p className="text-[#56595d]">@{Auth.displayName}</p>
+        <Popover>
+          <PopoverTrigger className="2xl:w-full">
+            <div className="hover:bg-secondary hidden cursor-pointer rounded-md sm:block 2xl:mt-4 2xl:flex 2xl:w-full 2xl:items-center 2xl:justify-between 2xl:p-3">
+              <div className="2xl:flex 2xl:items-center 2xl:gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    src={Auth?.imageUrl || "/path/to/default/image.png"}
+                  />
+                  <AvatarFallback>CN</AvatarFallback>
+                </Avatar>
+                <div className="hidden 2xl:flex 2xl:flex-col 2xl:items-start">
+                  <p>{Auth.username}</p>
+                  <p className="text-sm text-[#56595d]">@{Auth.displayName}</p>
+                </div>
+              </div>
+              <div className="hidden 2xl:block">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 -960 960 960"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
+                </svg>
+              </div>
             </div>
-          </div>
-          <div className="hidden 2xl:block">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 -960 960 960"
-              fill="currentColor"
-              className="h-5 w-5"
-            >
-              <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
-            </svg>
-          </div>
-        </div>
+          </PopoverTrigger>
+          <PopoverContent className="border-gray-700 shadow-2xl">
+            <div className="flex flex-col gap-3">
+              <div className="hover:bg-secondary cursor-pointer rounded-sm p-3">
+                <p className="font-semibold">Add an existing account</p>
+              </div>
+
+              <div
+                onClick={() => handleLogout()}
+                className="hover:bg-secondary cursor-pointer rounded-sm p-3"
+              >
+                <p className="font-semibold">Log out @{Auth.username}</p>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       <div className="bg-primary fixed right-5 bottom-20 cursor-pointer rounded-full p-3 sm:hidden">
         <svg

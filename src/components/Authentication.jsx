@@ -4,6 +4,8 @@ import GoogleIcon from "../assets/googleIcon.png";
 import { Button } from "@/components/ui/button";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "@/lib/api";
+import OAuthCallback from "./OAuthCallback";
 
 export default function Authentication() {
   const navigate = useNavigate();
@@ -16,6 +18,9 @@ export default function Authentication() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+  const handleGoogleSignIn = () => {
+    window.location.href = `${API_BASE_URL}/OAuth/challenge/Google?returnUrl=${window.location.origin}/auth/callback`;
+  };
   return (
     <ThemeProvider defaultTheme="dark">
       <div
@@ -35,7 +40,10 @@ export default function Authentication() {
           </h4>
           {/* Sign Up */}
           <div>
-            <div className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#ffffff] p-3 transition-all duration-300 hover:bg-[#e6e6e6]">
+            <div
+              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#ffffff] p-3 transition-all duration-300 hover:bg-[#e6e6e6]"
+              onClick={() => handleGoogleSignIn()}
+            >
               <img src={GoogleIcon} alt="Google Icon" className="h-5 w-5" />
               <p className="text-primary-foreground font-semibold">
                 Sign up with Google
