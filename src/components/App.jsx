@@ -5,6 +5,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import Footer from "./Footer";
 import SearchNewsFeed from "./SearchNewsFeed";
 import { API_BASE_URL } from "@/lib/api";
+import { jwtDecode } from "jwt-decode";
 
 export const States = createContext({ Auth: "", setAuth: () => {} });
 export default function App() {
@@ -13,26 +14,55 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE_URL}/User/current`, {
-      method: "GET",
-      credentials: "include",
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Authentication failed or session expired");
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const currentTime = Date.now() / 1000;
+        if (decoded.exp < currentTime) {
+          setAuth(null);
+          localStorage.removeItem("token");
+          navigate("/auth/login");
+          return;
         }
-        return res.json();
-      })
-      .then((data) => {
-        setAuth(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
+        console.log("Decoded token:", decoded);
+        const userId =
+          decoded[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+          ];
+        const username = decoded.sub;
+        console.log({ userId, username });
+        setAuth({ userId, username });
+        fetch(`${API_BASE_URL}/User/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => {
+            if (!res.ok)
+              throw new Error("Error Occured While Getting the User profile");
+            return res.json();
+          })
+          .then((data) => {
+            setLoading(false);
+            setAuth(data);
+            navigate("/");
+          })
+          .catch((error) => {
+            console.error("Fetch error:", error);
+            setAuth(null);
+          });
+      } catch (error) {
         setAuth(null);
-        setLoading(false);
-        navigate("/auth");
-      });
+        console.error("Invalid token:", error);
+        localStorage.removeItem("token");
+        navigate("/auth/login");
+      }
+    } else {
+      setAuth(null);
+      console.error("No token available");
+      navigate("/auth/login");
+    }
   }, [navigate]);
   useEffect(() => {
     if (!loading && Auth) {

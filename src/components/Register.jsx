@@ -53,10 +53,9 @@ export default function Register({}) {
       headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
       body: JSON.stringify({
-        Username: data.username,
         DisplayName: data.displayname,
+        UserName: data.username,
         Email: data.email,
         Password: data.password,
         BirthDate: new Date(data.dob).toISOString(),
@@ -70,9 +69,10 @@ export default function Register({}) {
             throw new Error(message);
           });
         }
-        return {};
+        return response.json();
       })
-      .then(() => {
+      .then((data) => {
+        localStorage.setItem("token", data.token);
         setLoading(false);
         navigate("/");
       })

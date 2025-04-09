@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/form";
 import { API_BASE_URL } from "@/lib/api";
 import { useState } from "react";
+import { ThemeProvider } from "./theme-provider";
+import Lottie from "lottie-react";
+import LoadingScreen from "../assets/LoadingScreen.json";
 
 const formSchema = z.object({
   email: z.string().min(3, "Email must be at least 3 characters"),
@@ -26,33 +29,53 @@ const formSchema = z.object({
 
 export default function Login() {
   const [authError, setAuthError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { email: "", password: "" },
   });
   const onSubmit = async (formData) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          Email: formData.email,
-          Password: formData.password,
-        }),
+    setLoading(true);
+    fetch(`${API_BASE_URL}/Auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        Email: formData.email,
+        Password: formData.password,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok)
+          return res.text().then((t) => {
+            setAuthError(t);
+            throw new Error(t);
+          });
+        return res.json();
+      })
+      .then((data) => {
+        setLoading(false);
+        console.log("Successfull Login");
+        localStorage.setItem("token", data.token);
+        navigate("/");
+      })
+      .catch((error) => {
+        setLoading(false);
+        setAuthError(`${error.message} . Please try again.`);
       });
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(errorMessage);
-      }
-      navigate("/");
-    } catch (error) {
-      setAuthError(`${error.message}. Please try again.`);
-    }
   };
+  if (loading)
+    return (
+      <ThemeProvider defaultTheme="dark">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#262d34]/75">
+          <div className="bg-background flex min-h-[80vh] w-150 items-center justify-center overflow-y-auto rounded-lg shadow-lg md:p-3">
+            <div style={{ filter: "brightness(0) invert(1)" }}>
+              <Lottie animationData={LoadingScreen} loop={true} />
+            </div>
+          </div>
+        </div>
+      </ThemeProvider>
+    );
   return (
     <div className="flex min-h-screen min-w-screen flex-col items-center overflow-y-auto p-3 md:min-h-full md:min-w-full md:p-0">
       <div className="flex w-full items-center">
