@@ -163,6 +163,7 @@ export default function Login() {
                 </Button>
                 <Button
                   className={`bg-background border-primary text-primary hover:text-primary-foreground h-12 w-full cursor-pointer rounded-full border font-bold transition-all duration-300`}
+                  onClick={() => navigate("/reset-password")}
                 >
                   Forget password?
                 </Button>
