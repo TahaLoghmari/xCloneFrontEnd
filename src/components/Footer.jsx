@@ -21,7 +21,7 @@ export default function Footer({}) {
   };
   return (
     <>
-      <div className="2sm:w-20 fixed bottom-0 flex w-full items-center justify-between overflow-x-auto overflow-y-auto border-t p-4 sm:h-full sm:w-17 sm:flex-col sm:border-r sm:p-2 2xl:min-h-screen 2xl:w-70 2xl:items-start 2xl:px-6 2xl:pb-6">
+      <div className="2sm:w-20 bg-background fixed bottom-0 flex w-full items-center justify-between overflow-x-auto overflow-y-auto border-t p-4 sm:h-full sm:w-17 sm:flex-col sm:border-r sm:p-2 2xl:min-h-screen 2xl:w-70 2xl:items-start 2xl:px-6 2xl:pb-6">
         <div className="flex w-full items-center justify-between sm:mb-6 sm:flex-col sm:justify-start sm:gap-8 2xl:mb-0 2xl:items-start">
           <div className="hidden items-center sm:flex">
             <svg

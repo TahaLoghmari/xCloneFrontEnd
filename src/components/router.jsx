@@ -4,7 +4,6 @@ import NewsFeed from "./NewsFeed";
 import Login from "./Login";
 import Register from "./Register";
 import Authentication from "./Authentication";
-import PasswordRecovery from "./PasswordRecovery";
 
 let router = createBrowserRouter([
   {
@@ -25,10 +24,6 @@ let router = createBrowserRouter([
         element: <Register />,
       },
     ],
-  },
-  {
-    path: "/reset-password",
-    element: <PasswordRecovery />,
   },
 ]);
 

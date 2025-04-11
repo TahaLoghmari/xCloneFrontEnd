@@ -12,6 +12,7 @@ export default function Authentication() {
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
   const [width, setWidth] = useState(window.innerWidth);
+  document.title = "X. it's what's happening /";
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
     window.addEventListener("resize", handleResize);
@@ -36,11 +37,6 @@ export default function Authentication() {
           </h4>
           {/* Sign Up */}
           <div>
-            <div className="my-2 flex items-center justify-center">
-              <hr className="mx-2 w-full border-t border-gray-500" />
-              <span className="mx-2 text-sm text-gray-500">or</span>
-              <hr className="mx-2 w-full border-t border-gray-500" />
-            </div>
             <Button
               className="text-primary h-12 w-full cursor-pointer rounded-full bg-[#4999ed] p-3 font-bold transition-all duration-300 hover:bg-[#428ad5]"
               onClick={() => navigate("/auth/signup")}

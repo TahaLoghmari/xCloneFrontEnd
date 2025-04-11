@@ -96,17 +96,6 @@ export default function Login() {
           Sign in to X
         </h3>
         <div>
-          <div className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#ffffff] p-3 transition-all duration-300 hover:bg-[#e6e6e6]">
-            <img src={GoogleIcon} alt="Google Icon" className="h-5 w-5" />
-            <p className="text-primary-foreground font-semibold">
-              Sign in with Google
-            </p>
-          </div>
-          <div className="my-2 flex items-center justify-center">
-            <hr className="mx-2 w-full border-t border-gray-500" />
-            <span className="mx-2 text-sm text-gray-500">or</span>
-            <hr className="mx-2 w-full border-t border-gray-500" />
-          </div>
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -151,23 +140,15 @@ export default function Login() {
                   </FormItem>
                 )}
               />
-              <div className="flex flex-col gap-5">
-                <Button
-                  className={`h-12 w-full cursor-pointer rounded-full font-bold transition-all duration-300 ${
-                    form.formState.isValid ? "opacity-100" : "opacity-50"
-                  }`}
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                >
-                  {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
-                </Button>
-                <Button
-                  className={`bg-background border-primary text-primary hover:text-primary-foreground h-12 w-full cursor-pointer rounded-full border font-bold transition-all duration-300`}
-                  onClick={() => navigate("/reset-password")}
-                >
-                  Forget password?
-                </Button>
-              </div>
+              <Button
+                className={`mt-2 h-12 w-full cursor-pointer rounded-full font-bold transition-all duration-300 ${
+                  form.formState.isValid ? "opacity-100" : "opacity-50"
+                }`}
+                type="submit"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
+              </Button>
               <p className="mt-12 text-gray-600">
                 Don't have an account?{" "}
                 <span

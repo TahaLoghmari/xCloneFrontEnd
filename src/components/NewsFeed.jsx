@@ -11,13 +11,15 @@ export default function NewsFeed({}) {
     <NewsFeedStates.Provider
       value={{ forYou, following, setForYou, setFollowing }}
     >
-      <div className="2sm:ml-20 semixl:w-[63%] w-full sm:ml-17 md:border-r xl:w-[67%] 2xl:ml-70">
+      <div className="2sm:ml-20 semixl:w-[63%] flex w-full flex-col sm:ml-17 md:border-r xl:w-[67%] 2xl:ml-70">
         {/* This is The Header */}
         <NewsFeedHeader />
-        {/* This is the part where you can post */}
-        <NewsFeedAddPost />
-        {/* Posts part */}
-        <NewsFeedPosts />
+        <div className="flex w-full flex-1 flex-col">
+          {/* This is the part where you can post */}
+          <NewsFeedAddPost />
+          {/* Posts part */}
+          <NewsFeedPosts />
+        </div>
       </div>
     </NewsFeedStates.Provider>
   );

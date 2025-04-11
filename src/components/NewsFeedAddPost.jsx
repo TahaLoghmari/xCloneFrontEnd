@@ -34,10 +34,10 @@ export default function NewsFeedAddPost({}) {
   });
   const onSubmit = async (formData) => {};
   return (
-    <div className="flex w-full border-b p-4">
-      <div className="flex w-full">
-        <div className="flex w-[10%] flex-col items-center">
-          <Avatar>
+    <div className="mt-4 flex w-full justify-center border-b">
+      <div className="flex w-[95%]">
+        <div className="flex w-13 flex-col">
+          <Avatar className="h-auto w-10">
             <AvatarImage src={Auth.imageUrl} />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
@@ -45,7 +45,7 @@ export default function NewsFeedAddPost({}) {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex w-[90%] flex-col space-y-4"
+            className="flex flex-1 flex-col space-y-4"
           >
             <FormField
               control={form.control}

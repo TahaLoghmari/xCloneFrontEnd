@@ -29,9 +29,9 @@ export default function NewsFeedHeader({}) {
       {/* Avatar - X Logo - Upgrade */}
       <div className="flex items-center justify-between sm:hidden">
         <Sheet>
-          <SheetTrigger>
-            <div className="w-20">
-              <Avatar>
+          <SheetTrigger className="w-13">
+            <div>
+              <Avatar className="h-auto w-8">
                 <AvatarImage src={Auth?.imageUrl} />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
@@ -89,19 +89,13 @@ export default function NewsFeedHeader({}) {
             </SheetHeader>
           </SheetContent>
         </Sheet>
-        <div className="">
+        <div className="flex flex-1 justify-center">
           <img
             src={WhiteXLogoNoBackground}
             alt="XLogo"
             className="h-auto w-12"
           />
         </div>
-        <Button
-          variant="primary"
-          className="w-24 rounded-full border-1 border-[#55636f] py-0 text-[15px] font-semibold"
-        >
-          Upgrade
-        </Button>
       </div>
       {/* This is the part where you choose the content you are seeing is from following or general */}
       <div className="mt-6 flex items-center justify-center sm:mt-0">

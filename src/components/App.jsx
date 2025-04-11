@@ -89,7 +89,7 @@ export default function App() {
     return (
       <ThemeProvider defaultTheme="dark">
         <States.Provider value={{ Auth, setAuth }}>
-          <div className="flex min-h-screen w-full flex-col sm:flex-row md:w-[690px] xl:w-[1000px] xl:flex-row xl:gap-4 2xl:w-[1280px] 2xl:gap-6">
+          <div className="flex w-full flex-col sm:flex-row md:w-[690px] xl:w-[1000px] xl:flex-row xl:gap-4 2xl:w-[1280px] 2xl:gap-6">
             {/* By default this is going to be the news feed */}
             <Outlet />
             <SearchNewsFeed />
