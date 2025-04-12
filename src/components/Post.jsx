@@ -1,7 +1,35 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dot } from "lucide-react";
+import {
+  MessageCircle,
+  Repeat2,
+  Heart,
+  Eye,
+  Bookmark,
+  Share,
+} from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Reply from "./Reply";
+import { useNavigate } from "react-router-dom";
+import { States } from "./App";
+import React from "react";
+import { useContext } from "react";
 
-export default function Post({ content }) {
+const Post = React.forwardRef(({ content }, ref) => {
+  const navigate = useNavigate();
+  const { Auth } = useContext(States);
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const postDate = new Date(dateString);
@@ -28,7 +56,13 @@ export default function Post({ content }) {
     }
   };
   return (
-    <div className="flex w-full justify-center border-b py-4">
+    <div
+      ref={ref}
+      className="flex w-full cursor-pointer justify-center border-b py-4 pb-0"
+      onClick={(e) => {
+        navigate(`/${Auth.username}/${Auth.id}/${content.id}`);
+      }}
+    >
       <div className="flex w-[95%]">
         <div className="flex w-13 flex-col">
           <Avatar className="h-auto w-10">
@@ -69,8 +103,103 @@ export default function Post({ content }) {
               />
             )}
           </div>
+          <div
+            className="mt-1 flex w-full items-center justify-between"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+          >
+            <Dialog>
+              <DialogTrigger asChild>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400">
+                          <MessageCircle className="h-4 w-4" />
+                          <p className="text-sm">{content.commentsCount}</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Reply</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </DialogTrigger>
+              <Reply content={content} Auth={Auth} />
+            </Dialog>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0f1a14] hover:text-[#50b87c]">
+                    <Repeat2 className="h-4 w-4" />
+                    <p className="text-sm">{content.sharesCount}</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Repost</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]">
+                    <Heart className="h-4 w-4" />
+                    <p className="text-sm">{content.likesCount}</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Like</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1d1f21] hover:text-blue-400">
+                    <Eye className="h-4 w-4" />
+                    <p className="text-sm">{content.viewsCount}</p>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>View</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <div className="flex items-center">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Bookmark className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Bookmark</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Share className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Share</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+});
+export default Post;

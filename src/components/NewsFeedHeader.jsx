@@ -101,7 +101,7 @@ export default function NewsFeedHeader({}) {
       <div className="mt-6 flex items-center justify-center sm:mt-0">
         <div className="flex w-[70%] items-center justify-between">
           {/* For You */}
-          <div className="">
+          <div className="cursor-pointer">
             <p
               className={`py-2 font-semibold transition-all duration-300 ${forYou ? "border-b-3 border-blue-400 opacity-100" : "opacity-50"}`}
               onClick={() => {
@@ -113,7 +113,7 @@ export default function NewsFeedHeader({}) {
             </p>
           </div>
           {/* Following */}
-          <div className="">
+          <div className="cursor-pointer">
             <p
               className={`py-2 font-semibold transition-all duration-300 ${following ? "border-b-3 border-blue-400 opacity-100" : "opacity-50"}`}
               onClick={() => {

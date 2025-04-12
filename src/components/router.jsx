@@ -4,12 +4,16 @@ import NewsFeed from "./NewsFeed";
 import Login from "./Login";
 import Register from "./Register";
 import Authentication from "./Authentication";
+import PostPage from "./PostPage";
 
 let router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    children: [{ path: "home", element: <NewsFeed /> }],
+    children: [
+      { path: "home", element: <NewsFeed /> },
+      { path: ":userName/:userId/:postId", element: <PostPage /> },
+    ],
   },
   {
     path: "/auth",
