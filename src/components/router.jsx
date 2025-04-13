@@ -5,14 +5,21 @@ import Login from "./Login";
 import Register from "./Register";
 import Authentication from "./Authentication";
 import PostPage from "./PostPage";
+import Reply from "./Reply";
 
 let router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      { path: "home", element: <NewsFeed /> },
-      { path: ":userName/:userId/:postId", element: <PostPage /> },
+      {
+        path: "/",
+        element: <NewsFeed />,
+      },
+      {
+        path: ":creatorUserName/:creatorId/:postId",
+        element: <PostPage />,
+      },
     ],
   },
   {

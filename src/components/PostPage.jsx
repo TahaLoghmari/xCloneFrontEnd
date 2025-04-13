@@ -13,14 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import Reply from "./Reply";
 import { useNavigate, useParams } from "react-router-dom";
 import { States } from "./App";
@@ -28,48 +21,23 @@ import { API_BASE_URL } from "@/lib/api";
 import Lottie from "lottie-react";
 import { ArrowLeft } from "lucide-react";
 import LoadingScreen from "../assets/LoadingScreen.json";
-import { Arrow } from "@radix-ui/react-popover";
-import React, {
-  useCallback,
-  useState,
-  useContext,
-  useEffect,
-  useRef,
-} from "react";
+import React, { useState, useContext, useEffect } from "react";
+import Comment from "./Comment";
 
 export default function PostPage() {
+  const { Auth } = useContext(States);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [reply, setReply] = useState(false);
   const [user, setUser] = useState(null);
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
-  const { userId, postId } = useParams();
+  const { creatorId, postId } = useParams();
   const navigate = useNavigate();
-  const { Auth } = useContext(States);
-  const observer = useRef();
 
-  const lastCommentRef = useCallback(
-    (node) => {
-      if (loading || loadingMore) return;
-
-      if (observer.current) observer.current.disconnect();
-
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMoreComments();
-        }
-      });
-
-      if (node) observer.current.observe(node);
-    },
-    [loading, loadingMore, hasMore],
-  );
   useEffect(() => {
     setLoading(true);
 
-    fetch(`${API_BASE_URL}/User/${userId}`, {
+    fetch(`${API_BASE_URL}/User/${creatorId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -84,6 +52,10 @@ export default function PostPage() {
       .then((data) => {
         setUser(data);
         return data;
+      })
+      .catch((error) => {
+        setLoading(false);
+        console.log(error);
       });
 
     fetch(`${API_BASE_URL}/Post/${postId}`, {
@@ -106,63 +78,29 @@ export default function PostPage() {
         console.error("Error loading initial data:", error);
         setLoading(false);
       });
-    setLoading(false);
-  }, [userId, postId]);
-  useEffect(() => {
-    if (!loading && post && user) fetchComments(1);
-  }, [loading, post, user]);
-  const fetchComments = (pageNum) => {
-    if (!post || loading) {
-      console.log("Post data not available yet");
-      setLoading(false);
-      return;
-    }
-    if (!user) {
-      console.log("User data not available yet");
-      setLoading(false);
-      return;
-    }
-    fetch(
-      `${API_BASE_URL}/Comment/post/paginated/${post.id}?page=${pageNum}&pageSize=10`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+    fetch(`${API_BASE_URL}/Comment/post/${postId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
-    )
+    })
       .then((res) => {
         if (!res.ok)
           return res.text().then((t) => {
-            console.log(t);
             throw new Error(t);
           });
         return res.json();
       })
       .then((data) => {
-        if (pageNum === 1) {
-          setComments(data);
-        } else {
-          setComments((prevPosts) => [...prevPosts, ...data]);
-        }
-
-        setHasMore(data.length > 0);
-        setLoading(false);
-        setLoadingMore(false);
+        setComments(data);
+        return data;
       })
       .catch((error) => {
+        console.error("Error loading initial data:", error);
         setLoading(false);
-        setLoadingMore(false);
-        console.log(error);
       });
-  };
-  const loadMoreComments = () => {
-    setLoadingMore(true);
-    setPage((prevPage) => {
-      const nextPage = prevPage + 1;
-      fetchComments(nextPage);
-      return nextPage;
-    });
-  };
+    setLoading(false);
+  }, [creatorId, postId]);
+
   function formatDate(dateString) {
     const date = new Date(dateString);
     const hours = date.getHours();
@@ -184,18 +122,23 @@ export default function PostPage() {
         </div>
       </div>
     );
-  console.log(user, post);
   if (!loading && user && post)
     return (
-      <div className="2sm:ml-20 semixl:w-[63%] flex w-full flex-col sm:ml-17 md:border-r xl:w-[67%] 2xl:ml-70">
+      <>
+        {post && reply && (
+          <Reply content={post} Auth={Auth} setReply={setReply} type="post" />
+        )}
         <div className="flex w-full justify-center py-4 pb-0">
           <div className="flex w-[95%] items-center gap-8">
-            <ArrowLeft className="h-5 w-5 cursor-pointer" />
+            <ArrowLeft
+              className="h-5 w-5 cursor-pointer"
+              onClick={() => navigate(-1)}
+            />
             <p className="text-lg font-bold">Post</p>
           </div>
         </div>
         <div className="flex w-full justify-center py-4 pb-0">
-          <div className="flex w-[95%]">
+          <div className="flex w-[90%]">
             <div className="mb-14 flex w-full flex-col gap-1 md:mb-0">
               <div className="flex gap-2">
                 <Avatar className="h-11 w-auto">
@@ -241,30 +184,23 @@ export default function PostPage() {
                     e.preventDefault();
                   }}
                 >
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                        }}
-                      >
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400">
-                                <MessageCircle className="h-4 w-4" />
-                                <p className="text-sm">{post.commentsCount}</p>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="bottom">
-                              <p>Reply</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </DialogTrigger>
-                    {/* <Reply content={post} Auth={Auth} /> */}
-                  </Dialog>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div
+                          className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400"
+                          onClick={() => setReply(true)}
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          <p className="text-sm">{post.commentsCount}</p>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Reply</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
@@ -330,24 +266,14 @@ export default function PostPage() {
                 </div>
                 {/* here */}
                 <div>
-                  {comments.map((comment, index) => {
-                    if (comments.length === index + 1) {
-                      return (
-                        <Comment
-                          ref={lastCommentRef}
-                          key={comment.id}
-                          content={comment}
-                        />
-                      );
-                    } else {
-                      return <Comment key={comment.id} content={comment} />;
-                    }
+                  {comments.map((comment) => {
+                    return <Comment key={comment.id} content={comment} />;
                   })}
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
 }

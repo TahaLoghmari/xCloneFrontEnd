@@ -25,13 +25,11 @@ export default function App() {
           navigate("/auth/login");
           return;
         }
-        console.log("Decoded token:", decoded);
         const userId =
           decoded[
             "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
           ];
         const username = decoded.sub;
-        console.log({ userId, username });
         setAuth({ userId, username });
         fetch(`${API_BASE_URL}/User/${userId}`, {
           headers: {
@@ -66,7 +64,7 @@ export default function App() {
   }, [navigate]);
   useEffect(() => {
     if (!loading && Auth) {
-      navigate("/home");
+      navigate("/");
     }
   }, [loading, Auth, navigate]);
   if (loading)
@@ -91,7 +89,9 @@ export default function App() {
         <States.Provider value={{ Auth, setAuth }}>
           <div className="flex w-full flex-col sm:flex-row md:w-[690px] xl:w-[1000px] xl:flex-row xl:gap-4 2xl:w-[1280px] 2xl:gap-6">
             {/* By default this is going to be the news feed */}
-            <Outlet />
+            <div className="2sm:ml-20 semixl:w-[63%] flex w-full flex-col sm:ml-17 md:border-r xl:w-[67%] 2xl:ml-70">
+              <Outlet />
+            </div>
             <SearchNewsFeed />
             <Footer />
           </div>
