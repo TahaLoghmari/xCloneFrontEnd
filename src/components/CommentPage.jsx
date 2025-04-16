@@ -1,44 +1,35 @@
+import React, { useContext, useState, useEffect } from "react";
+import { States } from "./App";
+import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "@/lib/api";
+import ReplyComment from "./ReplyComment";
+import { ArrowLeft } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  MessageCircle,
-  Repeat2,
-  Heart,
-  Eye,
-  Bookmark,
-  Share,
-} from "lucide-react";
+import Lottie from "lottie-react";
+import LoadingScreen from "../assets/LoadingScreen.json";
+import Comment from "./Comment";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import Reply from "./Reply";
-import { useNavigate, useParams } from "react-router-dom";
-import { States } from "./App";
-import { API_BASE_URL } from "@/lib/api";
-import Lottie from "lottie-react";
-import { ArrowLeft } from "lucide-react";
-import LoadingScreen from "../assets/LoadingScreen.json";
-import React, { useState, useContext, useEffect } from "react";
-import Comment from "./Comment";
-import ReplyComment from "./ReplyComment";
+import { MessageCircle, Heart } from "lucide-react";
 
-export default function PostPage() {
+export default function CommentPage() {
   const { Auth } = useContext(States);
   const [loading, setLoading] = useState(true);
-  const [reply, setReply] = useState(null);
   const [replyComment, setReplyComment] = useState(null);
+  const [replyReply, setReplyReply] = useState(null);
   const [user, setUser] = useState(null);
-  const [post, setPost] = useState(null);
-  const [comments, setComments] = useState([]);
-  const { creatorId, postId } = useParams();
+  const [comment, setComment] = useState(null);
+  const [replies, setReplies] = useState([]);
+  const { creatorId, commentId } = useParams();
   const navigate = useNavigate();
-
   useEffect(() => {
     setLoading(true);
 
-    fetch(`${API_BASE_URL}/User/${creatorId}`, {
+    const userPromise = fetch(`${API_BASE_URL}/User/${creatorId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -59,7 +50,7 @@ export default function PostPage() {
         console.log(error);
       });
 
-    fetch(`${API_BASE_URL}/Post/${postId}`, {
+    const commentPromise = fetch(`${API_BASE_URL}/Comment/${commentId}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -72,18 +63,21 @@ export default function PostPage() {
         return res.json();
       })
       .then((data) => {
-        setPost(data);
+        setComment(data);
         return data;
       })
       .catch((error) => {
         console.error("Error loading initial data:", error);
         setLoading(false);
       });
-    fetch(`${API_BASE_URL}/Comment/post/${postId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+    const repliesPromise = fetch(
+      `${API_BASE_URL}/Comment/replies/${commentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       },
-    })
+    )
       .then((res) => {
         if (!res.ok)
           return res.text().then((t) => {
@@ -92,15 +86,18 @@ export default function PostPage() {
         return res.json();
       })
       .then((data) => {
-        setComments(data);
+        setReplies(data);
         return data;
       })
       .catch((error) => {
         console.error("Error loading initial data:", error);
         setLoading(false);
       });
-    setLoading(false);
-  }, [creatorId, postId]);
+    Promise.all([userPromise, commentPromise, repliesPromise]).finally(() => {
+      setLoading(false);
+    });
+  }, [creatorId, commentId]);
+
   function formatDate(dateString) {
     const date = new Date(dateString);
     const hours = date.getHours();
@@ -114,6 +111,10 @@ export default function PostPage() {
 
     return `${formattedHours}:${formattedMinutes} ${ampm} · ${month} ${day}, ${year}`;
   }
+
+  // console.log("user :", user);
+  // console.log("comment : ", comment);
+  // console.log("replies :", replies);
   if (loading)
     return (
       <>
@@ -122,17 +123,18 @@ export default function PostPage() {
         </div>
       </>
     );
-  if (!loading && user && post)
+  if (!loading && user && replies && comment)
     return (
       <>
-        {post && reply === post.id && (
-          <Reply
-            content={post}
-            Auth={Auth}
-            setReply={setReply}
-            setPost={setPost}
-            setComments={setComments}
+        {comment && replyComment === comment.id && (
+          <ReplyComment
+            content={comment}
             setLoading={setLoading}
+            Auth={Auth}
+            postId={comment.postId}
+            setComments={setReplies}
+            setComment={setComment}
+            setReplyComment={setReplyComment}
           />
         )}
         <div className="flex w-full justify-center py-4 pb-0">
@@ -141,7 +143,7 @@ export default function PostPage() {
               className="h-5 w-5 cursor-pointer"
               onClick={() => navigate(-1)}
             />
-            <p className="text-lg font-bold">Post</p>
+            <p className="text-lg font-bold">Comment</p>
           </div>
         </div>
         <div className="flex w-full justify-center py-4 pb-0">
@@ -173,19 +175,13 @@ export default function PostPage() {
               </div>
               <div className="flex max-w-full min-w-0 flex-1 flex-col">
                 <div className="w-full overflow-hidden">
-                  <p className="w-full">{post.content}</p>
-                  {post.mediaUploadPath && (
-                    <img
-                      src={post.mediaUploadPath}
-                      className="mt-2 h-auto max-w-full rounded-md object-contain"
-                    />
-                  )}
+                  <p className="w-full">{comment.content}</p>
                 </div>
                 <p className="border-b py-3 text-sm text-[#56595d]">
-                  {formatDate(post.createdAt)}
+                  {formatDate(comment.createdAt)}
                 </p>
                 <div
-                  className="mt-1 flex w-full items-center justify-between border-b"
+                  className="mt-1 flex w-full items-center border-b"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -196,28 +192,14 @@ export default function PostPage() {
                       <TooltipTrigger>
                         <div
                           className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400"
-                          onClick={() => setReply(post.id)}
+                          onClick={() => setReplyComment(comment.id)}
                         >
                           <MessageCircle className="h-4 w-4" />
-                          <p className="text-sm">{post.commentsCount}</p>
+                          <p className="text-sm">{comment.repliesCount}</p>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
                         <p>Reply</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0f1a14] hover:text-[#50b87c]">
-                          <Repeat2 className="h-4 w-4" />
-                          <p className="text-sm">{post.sharesCount}</p>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>Repost</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -226,7 +208,7 @@ export default function PostPage() {
                       <TooltipTrigger>
                         <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]">
                           <Heart className="h-4 w-4" />
-                          <p className="text-sm">{post.likesCount}</p>
+                          <p className="text-sm">{comment.likesCount}</p>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
@@ -234,71 +216,37 @@ export default function PostPage() {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1d1f21] hover:text-blue-400">
-                          <Eye className="h-4 w-4" />
-                          <p className="text-sm">{post.viewsCount}</p>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>View</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  <div className="flex items-center">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Bookmark className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>Bookmark</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Share className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>Share</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
                 </div>
-                <div>
-                  {comments
-                    .slice()
-                    .sort(
-                      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
-                    )
-                    .map((comment, index) => (
-                      <React.Fragment key={comment.id}>
-                        {replyComment === comment.id && (
-                          <ReplyComment
-                            content={comment}
-                            setLoading={setLoading}
-                            Auth={Auth}
-                            postId={post.id}
-                            setReplyComment={setReplyComment}
-                            setComments={setComments}
-                            index={index}
-                            key={comment.id}
+              </div>
+              <div>
+                {replies
+                  ? replies
+                      .slice()
+                      .sort(
+                        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+                      )
+                      .map((reply, index) => (
+                        <React.Fragment key={reply.id}>
+                          {replyReply === reply.id && (
+                            <ReplyComment
+                              content={reply}
+                              setLoading={setLoading}
+                              Auth={Auth}
+                              setComments={setReplies}
+                              postId={reply.postId}
+                              setReplyComment={setReplyReply}
+                              index={index}
+                            />
+                          )}
+                          <Comment
+                            content={reply}
+                            key={reply.id}
+                            postId={reply.postId}
+                            setReplyComment={setReplyReply}
                           />
-                        )}
-                        <Comment
-                          content={comment}
-                          postId={post.id}
-                          setReplyComment={setReplyComment}
-                        />
-                      </React.Fragment>
-                    ))}
-                </div>
+                        </React.Fragment>
+                      ))
+                  : ""}
               </div>
             </div>
           </div>

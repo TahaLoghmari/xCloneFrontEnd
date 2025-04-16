@@ -20,16 +20,17 @@ import { States } from "./App";
 import React, { useState } from "react";
 import { useContext } from "react";
 
-export default function Comment({ content }) {
+export default function Comment({ content, setReplyComment }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const { Auth } = useContext(States);
+  // console.log("comment : ", content);
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const postDate = new Date(dateString);
     const seconds = Math.floor((now - postDate) / 1000);
 
     if (isNaN(seconds)) return "";
-
     const intervals = {
       y: 31536000,
       mo: 2592000,
@@ -48,8 +49,16 @@ export default function Comment({ content }) {
       }
     }
   };
+
   return (
-    <div className="flex w-full justify-center border-b pt-4">
+    <div
+      className="flex w-full cursor-pointer justify-center border-b pt-4"
+      onClick={() => {
+        navigate(
+          `/comment/${content.creator.username}/${content.creator.id}/${content.id}`,
+        );
+      }}
+    >
       <div className="flex w-[95%]">
         {/* image left part , width is fixed*/}
         <div className="flex w-13 flex-col">
@@ -62,7 +71,7 @@ export default function Comment({ content }) {
         <div className="flex max-w-full min-w-0 flex-1 flex-col">
           <div className="flex w-full gap-1">
             <div className="flex w-fit max-w-[60%] items-center gap-1 overflow-hidden">
-              <p className="truncate">{content.creator.userName}</p>
+              <p className="truncate">{content.creator.username}</p>
             </div>
             <div className="flex min-w-0 flex-1 items-center justify-between gap-1">
               <div className="flex">
@@ -103,7 +112,10 @@ export default function Comment({ content }) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400">
+                        <div
+                          className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400"
+                          onClick={() => setReplyComment(content.id)}
+                        >
                           <MessageCircle className="h-4 w-4" />
                           <p className="text-sm">{content.repliesCount}</p>
                         </div>
@@ -115,12 +127,6 @@ export default function Comment({ content }) {
                   </TooltipProvider>
                 </div>
               </DialogTrigger>
-              {/* <Reply
-                content={content}
-                Auth={Auth}
-                type="comment"
-                setIsOpen={setIsOpen}
-              /> */}
             </Dialog>
             <TooltipProvider>
               <Tooltip>

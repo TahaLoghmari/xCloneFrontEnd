@@ -19,11 +19,13 @@ import { useNavigate } from "react-router-dom";
 import { States } from "./App";
 import React, { useState } from "react";
 import { useContext, createContext } from "react";
+import { API_BASE_URL } from "@/lib/api";
 
-export default function Post({ content }) {
+export default function Post({ content, setPosts, index }) {
   const navigate = useNavigate();
   const { Auth } = useContext(States);
-  const [reply, setReply] = useState(false);
+  const [reply, setReply] = useState(null);
+  const [loadingLike, setLoadingLike] = useState(false);
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const postDate = new Date(dateString);
@@ -49,15 +51,33 @@ export default function Post({ content }) {
       }
     }
   };
+  const handleLike = () => {
+    setLoadingLike(true);
+    fetch(`${API_BASE_URL}/Like/post/${content.id}/${Auth.id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    }).then((data) => {
+      console.log(data);
+      setPosts((prevState) => [
+        ...prevState,
+        ([index] = {
+          ...prevState[index],
+          likesCount: prevState[index].likesCount + 1,
+        }),
+      ]);
+    });
+  };
   if (content) {
     return (
       <>
-        {content && reply && (
+        {content && reply === content.id && (
           <Reply
             content={content}
             Auth={Auth}
             setReply={setReply}
-            type="post"
+            setPosts={setPosts}
+            index={index}
           />
         )}
         <div
@@ -120,7 +140,7 @@ export default function Post({ content }) {
                     <TooltipTrigger>
                       <div
                         className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400"
-                        onClick={() => setReply(true)}
+                        onClick={() => setReply(content.id)}
                       >
                         <MessageCircle className="h-4 w-4" />
                         <p className="text-sm">{content.commentsCount}</p>
@@ -147,7 +167,10 @@ export default function Post({ content }) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]">
+                      <div
+                        className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
+                        onClick={() => handleLike()}
+                      >
                         <Heart className="h-4 w-4" />
                         <p className="text-sm">{content.likesCount}</p>
                       </div>

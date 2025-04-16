@@ -19,17 +19,17 @@ import { ArrowLeft } from "lucide-react";
 const formSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
 });
-export default function Reply({
+export default function ReplyComment({
   content,
   Auth,
-  setReply,
-  setPosts,
+  setReplyComment,
   index,
-  setPost,
-  setComments,
+  postId,
   setLoading,
+  setComments,
+  setComment,
 }) {
-  const navigate = useNavigate();
+  console.log("content", content);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { description: "" },
@@ -37,7 +37,7 @@ export default function Reply({
   const onSubmit = async (data) => {
     if (setLoading) setLoading(true);
     try {
-      const url = `${API_BASE_URL}/Comment/${Auth.id}/${content.id}`;
+      const url = `${API_BASE_URL}/Comment/${Auth.id}/${postId}/${content.id}`;
 
       const response = await fetch(url, {
         method: "POST",
@@ -57,23 +57,20 @@ export default function Reply({
 
       const responseData = await response.json();
       console.log("Replied Successfully", responseData);
-      if (setPosts)
-        setPosts((prevPosts) =>
-          prevPosts.map((post, i) =>
-            i === index
-              ? {
-                  ...post,
-                  commentsCount: post.commentsCount + 1,
-                }
-              : post,
-          ),
-        );
-      if (setPost)
-        setPost((prevState) => ({
-          ...prevState,
-          commentsCount: prevState.commentsCount + 1,
-        }));
-      if (setComments)
+
+      setReplyComment(null);
+      if (setComments && index)
+        // if this is comming from the replies
+        setComments((prevState) => {
+          const newComments = [...prevState];
+          newComments[index] = {
+            ...newComments[index],
+            repliesCount: newComments[index].repliesCount + 1,
+          };
+          return newComments;
+        });
+      if (setComments && !index)
+        // if this is comming from the parent comment
         setComments((prevState) => [
           ...prevState,
           {
@@ -94,10 +91,13 @@ export default function Reply({
             },
             likesCount: 0,
             repliesCount: 0,
-            id: responseData.id,
           },
         ]);
-      setReply(null);
+      if (setComment)
+        setComment((prevState) => ({
+          ...prevState,
+          repliesCount: prevState.repliesCount + 1,
+        }));
       if (setLoading) setLoading(false);
       return true;
     } catch (error) {
@@ -106,13 +106,12 @@ export default function Reply({
       return false;
     }
   };
-  console.log("Reply", content);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#262d34]/30"
       onClick={(e) => {
         e.stopPropagation();
-        setReply(null);
+        setReplyComment(false);
       }}
     >
       <div
@@ -125,12 +124,12 @@ export default function Reply({
           <div className="flex gap-3 py-5">
             <ArrowLeft
               className="h-5 w-5 cursor-pointer"
-              onClick={() => setReply(null)}
+              onClick={() => setReplyComment(false)}
             />
             <p>
               Replying to{" "}
               <span className="text-[#4999ed]">
-                @{content.creator.userName}
+                @{content.creator.username}
               </span>
             </p>
           </div>
@@ -182,7 +181,6 @@ export default function Reply({
                       }`}
                       type="submit"
                       disabled={form.formState.isSubmitting}
-                      onClick={() => console.log(form)}
                     >
                       {form.formState.isSubmitting ? "Replying..." : "Reply"}
                     </Button>

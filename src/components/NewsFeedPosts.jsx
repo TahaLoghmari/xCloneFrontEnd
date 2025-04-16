@@ -33,10 +33,9 @@ export default function NewsFeedPosts() {
         setAuthError(error);
       });
   }, []);
-
   if (loading)
     return (
-      <div className="flex h-full w-screen flex-col items-center justify-center">
+      <div className="flex h-full w-full flex-col items-center justify-center">
         <div style={{ filter: "brightness(0) invert(1)" }}>
           <Lottie
             animationData={LoadingScreen}
@@ -50,9 +49,16 @@ export default function NewsFeedPosts() {
   if (!loading && posts)
     return (
       <div className="mb-14 flex w-full flex-col md:mb-0">
-        {posts.map((post) => {
+        {posts.map((post, index) => {
           if (!post) return null;
-          return <Post key={post.id} content={post} />;
+          return (
+            <Post
+              key={post.id}
+              content={post}
+              setPosts={setPosts}
+              index={index}
+            />
+          );
         })}
       </div>
     );

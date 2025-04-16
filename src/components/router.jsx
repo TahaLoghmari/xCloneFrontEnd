@@ -6,6 +6,7 @@ import Register from "./Register";
 import Authentication from "./Authentication";
 import PostPage from "./PostPage";
 import Reply from "./Reply";
+import CommentPage from "./CommentPage";
 
 let router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ let router = createBrowserRouter([
       {
         path: ":creatorUserName/:creatorId/:postId",
         element: <PostPage />,
+      },
+      {
+        path: "comment/:creatorUserName/:creatorId/:commentId",
+        element: <CommentPage />,
       },
     ],
   },
