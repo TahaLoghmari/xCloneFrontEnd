@@ -38,7 +38,6 @@ export default function Reply({
     if (setLoading) setLoading(true);
     try {
       const url = `${API_BASE_URL}/Comment/${Auth.id}/${content.id}`;
-
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -56,7 +55,6 @@ export default function Reply({
       }
 
       const responseData = await response.json();
-      console.log("Replied Successfully", responseData);
       if (setPosts)
         setPosts((prevPosts) =>
           prevPosts.map((post, i) =>
@@ -73,7 +71,7 @@ export default function Reply({
           ...prevState,
           commentsCount: prevState.commentsCount + 1,
         }));
-      if (setComments)
+      if (setComments) {
         setComments((prevState) => [
           ...prevState,
           {
@@ -82,11 +80,13 @@ export default function Reply({
             postId: responseData.postId,
             content: responseData.content,
             createdAt: responseData.createdAt,
+            hasLiked: false,
             creator: {
+              id: Auth.id,
               birthDate: Auth.birthDate,
               createdAt: Auth.CreatedAt,
               imageUrl: Auth.imageUrl,
-              username: Auth.username,
+              userName: Auth.userName,
               displayName: Auth.displayName,
               email: Auth.email,
               followerCount: Auth.followerCount,
@@ -94,9 +94,9 @@ export default function Reply({
             },
             likesCount: 0,
             repliesCount: 0,
-            id: responseData.id,
           },
         ]);
+      }
       setReply(null);
       if (setLoading) setLoading(false);
       return true;
@@ -106,7 +106,6 @@ export default function Reply({
       return false;
     }
   };
-  console.log("Reply", content);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#262d34]/30"
@@ -182,7 +181,6 @@ export default function Reply({
                       }`}
                       type="submit"
                       disabled={form.formState.isSubmitting}
-                      onClick={() => console.log(form)}
                     >
                       {form.formState.isSubmitting ? "Replying..." : "Reply"}
                     </Button>

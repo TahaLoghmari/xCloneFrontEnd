@@ -38,7 +38,7 @@ export default function PostPage() {
   useEffect(() => {
     setLoading(true);
 
-    fetch(`${API_BASE_URL}/User/${creatorId}`, {
+    fetch(`${API_BASE_URL}/User/${creatorId}/${Auth.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -59,7 +59,7 @@ export default function PostPage() {
         console.log(error);
       });
 
-    fetch(`${API_BASE_URL}/Post/${postId}`, {
+    fetch(`${API_BASE_URL}/Post/${postId}/${Auth.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -79,7 +79,7 @@ export default function PostPage() {
         console.error("Error loading initial data:", error);
         setLoading(false);
       });
-    fetch(`${API_BASE_URL}/Comment/post/${postId}`, {
+    fetch(`${API_BASE_URL}/Comment/post/${postId}/${Auth.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -114,6 +114,53 @@ export default function PostPage() {
 
     return `${formattedHours}:${formattedMinutes} ${ampm} · ${month} ${day}, ${year}`;
   }
+  const [loadingLike, setLoadingLike] = useState(false);
+  const handleLike = () => {
+    setLoadingLike(true);
+    if (!post.hasLiked)
+      fetch(`${API_BASE_URL}/Like/post/${post.id}/${Auth.id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((data) => {
+          console.log(data);
+          setPost((prevState) => ({
+            ...prevState,
+            hasLiked: true,
+            likesCount: prevState.likesCount + 1,
+          }));
+          setLoadingLike(false);
+        })
+        .catch((error) => {
+          setLoadingLike(false);
+          console.log(error);
+        });
+    else
+      fetch(`${API_BASE_URL}/Like/post/${post.id}/${Auth.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((data) => {
+          console.log(data);
+          setPost((prevState) => ({
+            ...prevState,
+            hasLiked: false,
+            likesCount: prevState.likesCount - 1,
+          }));
+          setLoadingLike(false);
+        })
+        .catch((error) => {
+          setLoadingLike(false);
+          console.log(error);
+        });
+  };
+  console.log(comments);
   if (loading)
     return (
       <>
@@ -154,7 +201,7 @@ export default function PostPage() {
                 </Avatar>
                 <div className="flex w-full justify-between overflow-hidden">
                   <div className="flex w-fit max-w-[60%] flex-col">
-                    <p className="truncate">{user.username}</p>
+                    <p className="truncate">{user.userName}</p>
                     <p className="text-sm text-[#56595d]">
                       @{user.displayName}
                     </p>
@@ -185,7 +232,7 @@ export default function PostPage() {
                   {formatDate(post.createdAt)}
                 </p>
                 <div
-                  className="mt-1 flex w-full items-center justify-between border-b"
+                  className="mt-1 flex w-full items-center border-b"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -207,69 +254,45 @@ export default function PostPage() {
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <div
+                          className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
+                          onClick={() => handleLike()}
+                        >
+                          {post.hasLiked ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 -960 960 960"
+                              fill="#da317d"
+                              className="h-4 w-4"
+                            >
+                              <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z" />
+                            </svg>
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 -960 960 960"
+                              fill="currentColor"
+                              className="h-4 w-4"
+                            >
+                              <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z" />
+                            </svg>
+                          )}
 
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0f1a14] hover:text-[#50b87c]">
-                          <Repeat2 className="h-4 w-4" />
-                          <p className="text-sm">{post.sharesCount}</p>
+                          <p
+                            className={`text-sm ${post.hasLiked && "text-[#da317d]"}`}
+                          >
+                            {post.likesCount}
+                          </p>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>Repost</p>
+                        {post.hasLiked ? <p>Unlike</p> : <p>Like</p>}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]">
-                          <Heart className="h-4 w-4" />
-                          <p className="text-sm">{post.likesCount}</p>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>Like</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1d1f21] hover:text-blue-400">
-                          <Eye className="h-4 w-4" />
-                          <p className="text-sm">{post.viewsCount}</p>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>View</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-
-                  <div className="flex items-center">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Bookmark className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>Bookmark</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <Share className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          <p>Share</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
                 </div>
                 <div>
                   {comments
@@ -295,6 +318,8 @@ export default function PostPage() {
                           content={comment}
                           postId={post.id}
                           setReplyComment={setReplyComment}
+                          setComments={setComments}
+                          index={index}
                         />
                       </React.Fragment>
                     ))}

@@ -1,25 +1,22 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  MessageCircle,
-  Repeat2,
-  Heart,
-  Eye,
-  Bookmark,
-  Share,
-} from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import Reply from "./Reply";
 import { useNavigate } from "react-router-dom";
 import { States } from "./App";
 import React, { useState } from "react";
 import { useContext, createContext } from "react";
 import { API_BASE_URL } from "@/lib/api";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export default function Post({ content, setPosts, index }) {
   const navigate = useNavigate();
@@ -53,20 +50,60 @@ export default function Post({ content, setPosts, index }) {
   };
   const handleLike = () => {
     setLoadingLike(true);
-    fetch(`${API_BASE_URL}/Like/post/${content.id}/${Auth.id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    }).then((data) => {
-      console.log(data);
-      setPosts((prevState) => [
-        ...prevState,
-        ([index] = {
-          ...prevState[index],
-          likesCount: prevState[index].likesCount + 1,
-        }),
-      ]);
-    });
+    if (!content.hasLiked)
+      fetch(`${API_BASE_URL}/Like/post/${content.id}/${Auth.id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((data) => {
+          console.log(data);
+          setPosts((prevState) => {
+            return prevState.map((post) =>
+              post.id === content.id
+                ? {
+                    ...post,
+                    likesCount: post.likesCount + 1,
+                    hasLiked: true,
+                  }
+                : post,
+            );
+          });
+          setLoadingLike(false);
+        })
+        .catch((error) => {
+          setLoadingLike(false);
+          console.log(error);
+        });
+    else
+      fetch(`${API_BASE_URL}/Like/post/${content.id}/${Auth.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((data) => {
+          console.log(data);
+          setPosts((prevState) => {
+            return prevState.map((post) =>
+              post.id === content.id
+                ? {
+                    ...post,
+                    likesCount: post.likesCount - 1,
+                    hasLiked: false,
+                  }
+                : post,
+            );
+          });
+          setLoadingLike(false);
+        })
+        .catch((error) => {
+          setLoadingLike(false);
+          console.log(error);
+        });
   };
   if (content) {
     return (
@@ -109,14 +146,36 @@ export default function Post({ content, setPosts, index }) {
                       . {formatTimeAgo(content.createdAt)}
                     </p>
                   </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 -960 960 960"
-                    fill="#56595d"
-                    className="h-5 w-5"
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
                   >
-                    <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
-                  </svg>
+                    <Popover>
+                      <PopoverTrigger>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 -960 960 960"
+                          fill="#56595d"
+                          className="h-5 w-5 cursor-pointer"
+                        >
+                          <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
+                        </svg>
+                      </PopoverTrigger>
+                      <PopoverContent>
+                        <p
+                          className="cursor-pointer text-sm"
+                          onClick={() => handleFollow()}
+                        >
+                          Follow{" "}
+                          <span className="text-[#56595d]">
+                            @{content.creator.displayName}
+                          </span>
+                        </p>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
               </div>
               <div className="w-full overflow-hidden">
@@ -129,7 +188,7 @@ export default function Post({ content, setPosts, index }) {
                 )}
               </div>
               <div
-                className="mt-1 flex w-full items-center justify-between"
+                className="mt-1 flex w-full items-center justify-start"
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -154,67 +213,42 @@ export default function Post({ content, setPosts, index }) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
-                      <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0f1a14] hover:text-[#50b87c]">
-                        <Repeat2 className="h-4 w-4" />
-                        <p className="text-sm">{content.sharesCount}</p>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Repost</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
                       <div
                         className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
                         onClick={() => handleLike()}
                       >
-                        <Heart className="h-4 w-4" />
-                        <p className="text-sm">{content.likesCount}</p>
+                        {content.hasLiked ? (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 -960 960 960"
+                            fill="#da317d"
+                            className="h-4 w-4"
+                          >
+                            <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z" />
+                          </svg>
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 -960 960 960"
+                            fill="currentColor"
+                            className="h-4 w-4"
+                          >
+                            <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z" />
+                          </svg>
+                        )}
+
+                        <p
+                          className={`text-sm ${content.hasLiked && "text-[#da317d]"}`}
+                        >
+                          {content.likesCount}
+                        </p>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>Like</p>
+                      {content.hasLiked ? <p>Unlike</p> : <p>Like</p>}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1d1f21] hover:text-blue-400">
-                        <Eye className="h-4 w-4" />
-                        <p className="text-sm">{content.viewsCount}</p>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>View</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className="flex items-center">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Bookmark className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>Bookmark</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Share className="h-10 w-10 cursor-pointer rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400" />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <p>Share</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
               </div>
             </div>
           </div>

@@ -29,9 +29,9 @@ export default function App() {
           decoded[
             "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
           ];
-        const username = decoded.sub;
-        setAuth({ userId, username });
-        fetch(`${API_BASE_URL}/User/${userId}`, {
+        const userName = decoded.sub;
+        setAuth({ userId, userName });
+        fetch(`${API_BASE_URL}/User/${userId}/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -62,6 +62,7 @@ export default function App() {
       navigate("/auth/login");
     }
   }, [navigate]);
+
   useEffect(() => {
     if (!loading && Auth) {
       navigate("/");

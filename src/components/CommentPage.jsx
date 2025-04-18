@@ -25,6 +25,7 @@ export default function CommentPage() {
   const [comment, setComment] = useState(null);
   const [replies, setReplies] = useState([]);
   const { creatorId, commentId } = useParams();
+  const [loadingLike, setLoadingLike] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     setLoading(true);
@@ -50,11 +51,14 @@ export default function CommentPage() {
         console.log(error);
       });
 
-    const commentPromise = fetch(`${API_BASE_URL}/Comment/${commentId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+    const commentPromise = fetch(
+      `${API_BASE_URL}/Comment/${commentId}/${Auth.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       },
-    })
+    )
       .then((res) => {
         if (!res.ok)
           return res.text().then((text) => {
@@ -71,7 +75,7 @@ export default function CommentPage() {
         setLoading(false);
       });
     const repliesPromise = fetch(
-      `${API_BASE_URL}/Comment/replies/${commentId}`,
+      `${API_BASE_URL}/Comment/replies/${commentId}/${Auth.id}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -111,10 +115,50 @@ export default function CommentPage() {
 
     return `${formattedHours}:${formattedMinutes} ${ampm} · ${month} ${day}, ${year}`;
   }
+  const handleLike = () => {
+    setLoadingLike(true);
+    if (!comment.hasLiked)
+      fetch(`${API_BASE_URL}/Like/comment/${comment.id}/${Auth.id}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((data) => {
+          setComment((prevState) => ({
+            ...prevState,
+            hasLiked: true,
+            likesCount: prevState.likesCount + 1,
+          }));
+          setLoadingLike(false);
+        })
+        .catch((error) => {
+          setLoadingLike(false);
+          console.log(error);
+        });
+    else
+      fetch(`${API_BASE_URL}/Like/comment/${comment.id}/${Auth.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((data) => {
+          setComment((prevState) => ({
+            ...prevState,
+            hasLiked: false,
+            likesCount: prevState.likesCount - 1,
+          }));
+          setLoadingLike(false);
+        })
+        .catch((error) => {
+          setLoadingLike(false);
+          console.log(error);
+        });
+  };
 
-  // console.log("user :", user);
-  // console.log("comment : ", comment);
-  // console.log("replies :", replies);
   if (loading)
     return (
       <>
@@ -156,7 +200,7 @@ export default function CommentPage() {
                 </Avatar>
                 <div className="flex w-full justify-between overflow-hidden">
                   <div className="flex w-fit max-w-[60%] flex-col">
-                    <p className="truncate">{user.username}</p>
+                    <p className="truncate">{user.userName}</p>
                     <p className="text-sm text-[#56595d]">
                       @{user.displayName}
                     </p>
@@ -206,13 +250,39 @@ export default function CommentPage() {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <div className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]">
-                          <Heart className="h-4 w-4" />
-                          <p className="text-sm">{comment.likesCount}</p>
+                        <div
+                          className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
+                          onClick={() => handleLike()}
+                        >
+                          {comment.hasLiked ? (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 -960 960 960"
+                              fill="#da317d"
+                              className="h-4 w-4"
+                            >
+                              <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z" />
+                            </svg>
+                          ) : (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 -960 960 960"
+                              fill="currentColor"
+                              className="h-4 w-4"
+                            >
+                              <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z" />
+                            </svg>
+                          )}
+
+                          <p
+                            className={`text-sm ${comment.hasLiked && "text-[#da317d]"}`}
+                          >
+                            {comment.likesCount}
+                          </p>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p>Like</p>
+                        {comment.hasLiked ? <p>Unlike</p> : <p>Like</p>}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -240,9 +310,10 @@ export default function CommentPage() {
                           )}
                           <Comment
                             content={reply}
-                            key={reply.id}
                             postId={reply.postId}
                             setReplyComment={setReplyReply}
+                            setComments={setReplies}
+                            index={index}
                           />
                         </React.Fragment>
                       ))

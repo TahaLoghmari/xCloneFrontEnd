@@ -46,7 +46,7 @@ export default function NewsFeedHeader({}) {
                     <AvatarFallback>CN</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <p>{Auth.username}</p>
+                    <p>{Auth.userName}</p>
                     <p className="text-sm text-[#56595d]">
                       @{Auth.displayName}
                     </p>
@@ -64,18 +64,10 @@ export default function NewsFeedHeader({}) {
                 </div>
               </SheetTitle>
               <SheetDescription>
-                <div className="mt-6 flex h-50 flex-col items-start justify-between border-b pb-8">
+                <div className="mt-6 flex h-50 flex-col items-start gap-6 border-b pb-8">
                   <div className="text-primary flex items-center justify-start gap-3">
                     <User className="flex h-7 w-7 items-center justify-center" />
                     <p className="text-lg font-bold">Profile</p>
-                  </div>
-                  <div className="text-primary flex items-center justify-start gap-3">
-                    <Settings className="flex h-7 w-7 items-center justify-center" />
-                    <p className="text-lg font-bold">Settings</p>
-                  </div>
-                  <div className="text-primary flex items-center justify-start gap-3">
-                    <Users className="flex h-7 w-7 items-center justify-center" />
-                    <p className="text-lg font-bold">Switch account</p>
                   </div>
                   <div
                     className="text-primary flex items-center justify-start gap-3"

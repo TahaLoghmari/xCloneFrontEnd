@@ -29,7 +29,6 @@ export default function ReplyComment({
   setComments,
   setComment,
 }) {
-  console.log("content", content);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: { description: "" },
@@ -56,20 +55,9 @@ export default function ReplyComment({
       }
 
       const responseData = await response.json();
-      console.log("Replied Successfully", responseData);
 
       setReplyComment(null);
-      if (setComments && index)
-        // if this is comming from the replies
-        setComments((prevState) => {
-          const newComments = [...prevState];
-          newComments[index] = {
-            ...newComments[index],
-            repliesCount: newComments[index].repliesCount + 1,
-          };
-          return newComments;
-        });
-      if (setComments && !index)
+      if (setComments && index == null) {
         // if this is comming from the parent comment
         setComments((prevState) => [
           ...prevState,
@@ -79,11 +67,13 @@ export default function ReplyComment({
             postId: responseData.postId,
             content: responseData.content,
             createdAt: responseData.createdAt,
+            hasLiked: false,
             creator: {
+              id: Auth.id,
               birthDate: Auth.birthDate,
               createdAt: Auth.CreatedAt,
               imageUrl: Auth.imageUrl,
-              username: Auth.username,
+              userName: Auth.userName,
               displayName: Auth.displayName,
               email: Auth.email,
               followerCount: Auth.followerCount,
@@ -93,6 +83,18 @@ export default function ReplyComment({
             repliesCount: 0,
           },
         ]);
+      } else if (setComments) {
+        // if this is comming from the replies
+        setComments((prevState) => {
+          const newComments = [...prevState];
+          newComments[index] = {
+            ...newComments[index],
+            repliesCount: newComments[index].repliesCount + 1,
+          };
+          return newComments;
+        });
+      }
+
       if (setComment)
         setComment((prevState) => ({
           ...prevState,
@@ -129,7 +131,7 @@ export default function ReplyComment({
             <p>
               Replying to{" "}
               <span className="text-[#4999ed]">
-                @{content.creator.username}
+                @{content.creator.userName}
               </span>
             </p>
           </div>

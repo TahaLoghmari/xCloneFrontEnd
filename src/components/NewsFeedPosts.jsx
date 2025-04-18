@@ -1,17 +1,19 @@
 import { API_BASE_URL } from "@/lib/api";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useContext } from "react";
 import Lottie from "lottie-react";
 import LoadingScreen from "../assets/LoadingScreen.json";
 import Post from "./Post";
+import { States } from "./App";
 
 export default function NewsFeedPosts() {
+  const { Auth } = useContext(States);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
   const [posts, setPosts] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE_URL}/Post/allPosts`, {
+    fetch(`${API_BASE_URL}/Post/allPosts/${Auth.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
