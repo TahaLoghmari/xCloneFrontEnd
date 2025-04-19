@@ -5,8 +5,8 @@ import Login from "./Login";
 import Register from "./Register";
 import Authentication from "./Authentication";
 import PostPage from "./PostPage";
-import Reply from "./Reply";
 import CommentPage from "./CommentPage";
+import Profile from "./Profile";
 
 let router = createBrowserRouter([
   {
@@ -24,6 +24,10 @@ let router = createBrowserRouter([
       {
         path: "comment/:creatorUserName/:creatorId/:commentId",
         element: <CommentPage />,
+      },
+      {
+        path: ":userName/:id",
+        element: <Profile />,
       },
     ],
   },

@@ -21,8 +21,11 @@ export default function Footer({}) {
   return (
     <>
       <div className="2sm:w-20 bg-background fixed bottom-0 flex w-full items-center justify-between overflow-x-auto overflow-y-auto border-t p-4 sm:h-full sm:w-17 sm:flex-col sm:border-r sm:p-2 2xl:min-h-screen 2xl:w-70 2xl:items-start 2xl:px-6 2xl:pb-6">
-        <div className="flex w-full items-center justify-between sm:mb-6 sm:flex-col sm:justify-start sm:gap-8 2xl:mb-0 2xl:items-start">
-          <div className="hidden items-center sm:flex">
+        <div className="flex w-full items-center justify-between sm:mb-6 sm:flex-col sm:justify-start sm:gap-8 2xl:mb-0 2xl:items-start 2xl:gap-4">
+          <div
+            className="hidden cursor-pointer items-center sm:flex 2xl:rounded-full 2xl:px-2 2xl:py-4 2xl:hover:bg-[#181818]"
+            onClick={() => navigate("/")}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 30 30"
@@ -32,7 +35,10 @@ export default function Footer({}) {
               <path d="M26.37,26l-8.795-12.822l0.015,0.012L25.52,4h-2.65l-6.46,7.48L11.28,4H4.33l8.211,11.971L12.54,15.97L3.88,26h2.65 l7.182-8.322L19.42,26H26.37z M10.23,6l12.34,18h-2.1L8.12,6H10.23z" />
             </svg>
           </div>
-          <div className="flex items-center gap-4">
+          <div
+            className="flex cursor-pointer items-center gap-4 2xl:rounded-full 2xl:py-4 2xl:pr-7 2xl:pl-2 2xl:hover:bg-[#181818]"
+            onClick={() => navigate("/")}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 -960 960 960"
@@ -43,7 +49,7 @@ export default function Footer({}) {
             </svg>
             <p className="hidden text-xl 2xl:block">Home</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex cursor-pointer items-center gap-4 2xl:rounded-full 2xl:py-4 2xl:pr-7 2xl:pl-2 2xl:hover:bg-[#181818]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 -960 960 960"
@@ -54,7 +60,10 @@ export default function Footer({}) {
             </svg>
             <p className="hidden text-xl 2xl:block">Notifications</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div
+            className="flex cursor-pointer items-center gap-4 2xl:rounded-full 2xl:py-4 2xl:pr-7 2xl:pl-2 2xl:hover:bg-[#181818]"
+            onClick={() => navigate(`/${Auth.userName}/${Auth.id}`)}
+          >
             <User className="flex h-7 w-7 items-center justify-center sm:h-7 sm:w-7 2xl:h-8 2xl:w-8" />
             <p className="hidden text-xl 2xl:block">Profile</p>
           </div>

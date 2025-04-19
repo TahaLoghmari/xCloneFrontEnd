@@ -42,7 +42,6 @@ export default function Comment({
         },
       })
         .then((data) => {
-          console.log(data);
           setComments((prevState) => {
             return prevState.map((comment) =>
               comment.id === content.id

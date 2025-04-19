@@ -28,6 +28,7 @@ export default function ReplyComment({
   setLoading,
   setComments,
   setComment,
+  skip,
 }) {
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -57,49 +58,47 @@ export default function ReplyComment({
       const responseData = await response.json();
 
       setReplyComment(null);
-      if (setComments && index == null) {
-        // if this is comming from the parent comment
-        setComments((prevState) => [
-          ...prevState,
-          {
-            id: responseData.id,
-            userId: responseData.userId,
-            postId: responseData.postId,
-            content: responseData.content,
-            createdAt: responseData.createdAt,
-            hasLiked: false,
-            creator: {
-              id: Auth.id,
-              birthDate: Auth.birthDate,
-              createdAt: Auth.CreatedAt,
-              imageUrl: Auth.imageUrl,
-              userName: Auth.userName,
-              displayName: Auth.displayName,
-              email: Auth.email,
-              followerCount: Auth.followerCount,
-              followingCount: Auth.followingCount,
+      if (setComments) {
+        if (!skip)
+          setComments((prevState) => [
+            ...prevState,
+            {
+              id: responseData.id,
+              userId: responseData.userId,
+              postId: responseData.postId,
+              content: responseData.content,
+              createdAt: responseData.createdAt,
+              hasLiked: false,
+              creator: {
+                id: Auth.id,
+                hasBeenfollowed: false,
+                birthDate: Auth.birthDate,
+                createdAt: Auth.CreatedAt,
+                imageUrl: Auth.imageUrl,
+                userName: Auth.userName,
+                displayName: Auth.displayName,
+                email: Auth.email,
+                followerCount: Auth.followerCount,
+                followingCount: Auth.followingCount,
+              },
+              likesCount: 0,
+              repliesCount: 0,
             },
-            likesCount: 0,
-            repliesCount: 0,
-          },
-        ]);
-      } else if (setComments) {
-        // if this is comming from the replies
-        setComments((prevState) => {
-          const newComments = [...prevState];
-          newComments[index] = {
-            ...newComments[index],
-            repliesCount: newComments[index].repliesCount + 1,
-          };
-          return newComments;
-        });
+          ]);
+        setComments((prevState) =>
+          prevState.map((comment) =>
+            comment.id === content.id
+              ? { ...comment, repliesCount: comment.repliesCount + 1 }
+              : comment,
+          ),
+        );
       }
-
-      if (setComment)
+      if (setComment) {
         setComment((prevState) => ({
           ...prevState,
           repliesCount: prevState.repliesCount + 1,
         }));
+      }
       if (setLoading) setLoading(false);
       return true;
     } catch (error) {

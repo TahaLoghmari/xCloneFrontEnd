@@ -83,6 +83,7 @@ export default function Reply({
             hasLiked: false,
             creator: {
               id: Auth.id,
+              hasBeenfollowed: false,
               birthDate: Auth.birthDate,
               createdAt: Auth.CreatedAt,
               imageUrl: Auth.imageUrl,

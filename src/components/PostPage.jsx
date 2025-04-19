@@ -126,7 +126,6 @@ export default function PostPage() {
         },
       })
         .then((data) => {
-          console.log(data);
           setPost((prevState) => ({
             ...prevState,
             hasLiked: true,
@@ -147,7 +146,6 @@ export default function PostPage() {
         },
       })
         .then((data) => {
-          console.log(data);
           setPost((prevState) => ({
             ...prevState,
             hasLiked: false,
@@ -160,7 +158,6 @@ export default function PostPage() {
           console.log(error);
         });
   };
-  console.log(comments);
   if (loading)
     return (
       <>
@@ -312,6 +309,7 @@ export default function PostPage() {
                             setComments={setComments}
                             index={index}
                             key={comment.id}
+                            skip={true}
                           />
                         )}
                         <Comment

@@ -65,7 +65,10 @@ export default function NewsFeedHeader({}) {
               </SheetTitle>
               <SheetDescription>
                 <div className="mt-6 flex h-50 flex-col items-start gap-6 border-b pb-8">
-                  <div className="text-primary flex items-center justify-start gap-3">
+                  <div
+                    className="text-primary flex cursor-pointer items-center justify-start gap-3"
+                    onClick={() => navigate(`/${Auth.userName}/${Auth.id}`)}
+                  >
                     <User className="flex h-7 w-7 items-center justify-center" />
                     <p className="text-lg font-bold">Profile</p>
                   </div>

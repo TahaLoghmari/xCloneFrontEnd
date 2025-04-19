@@ -30,7 +30,7 @@ export default function CommentPage() {
   useEffect(() => {
     setLoading(true);
 
-    const userPromise = fetch(`${API_BASE_URL}/User/${creatorId}`, {
+    const userPromise = fetch(`${API_BASE_URL}/User/${creatorId}/${Auth.id}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -306,6 +306,7 @@ export default function CommentPage() {
                               postId={reply.postId}
                               setReplyComment={setReplyReply}
                               index={index}
+                              skip={true}
                             />
                           )}
                           <Comment

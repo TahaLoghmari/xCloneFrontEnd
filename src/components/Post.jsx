@@ -48,6 +48,71 @@ export default function Post({ content, setPosts, index }) {
       }
     }
   };
+  const handleFollow = () => {
+    if (!content.creator.hasBeenfollowed)
+      fetch(`${API_BASE_URL}/Follow/${Auth.id}/${content.userId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => {
+          if (!res.ok)
+            return res.text().then((t) => {
+              throw new Error(t);
+            });
+          return res.json();
+        })
+        .then((data) => {
+          console.log(data);
+          setPosts((prevState) => {
+            return prevState.map((post) =>
+              post.id === content.id
+                ? {
+                    ...post,
+                    creator: {
+                      ...post.creator,
+                      hasBeenfollowed: true,
+                    },
+                  }
+                : post,
+            );
+          });
+        })
+        .catch((error) => console.log(error));
+    else
+      fetch(`${API_BASE_URL}/Follow/unfollow/${Auth.id}/${content.userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok)
+            return res.text().then((t) => {
+              throw new Error(t);
+            });
+          return res.text().then((text) => ({ success: true, message: text }));
+        })
+        .then((data) => {
+          console.log(data);
+          setPosts((prevState) => {
+            return prevState.map((post) =>
+              post.id === content.id
+                ? {
+                    ...post,
+                    creator: {
+                      ...post.creator,
+                      hasBeenfollowed: false,
+                    },
+                  }
+                : post,
+            );
+          });
+        })
+        .catch((error) => console.log(error));
+  };
   const handleLike = () => {
     setLoadingLike(true);
     if (!content.hasLiked)
@@ -59,7 +124,6 @@ export default function Post({ content, setPosts, index }) {
         },
       })
         .then((data) => {
-          console.log(data);
           setPosts((prevState) => {
             return prevState.map((post) =>
               post.id === content.id
@@ -86,7 +150,6 @@ export default function Post({ content, setPosts, index }) {
         },
       })
         .then((data) => {
-          console.log(data);
           setPosts((prevState) => {
             return prevState.map((post) =>
               post.id === content.id
@@ -126,7 +189,14 @@ export default function Post({ content, setPosts, index }) {
           }}
         >
           <div className="flex w-[95%]">
-            <div className="flex w-13 flex-col">
+            <div
+              className="flex w-13 flex-col"
+              onClick={(e) => {
+                navigate(`/${content.creator.userName}/${content.userId}`);
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
               <Avatar className="h-auto w-10">
                 <AvatarImage src={content.creator.imageUrl} />
                 <AvatarFallback>CN</AvatarFallback>
@@ -134,12 +204,28 @@ export default function Post({ content, setPosts, index }) {
             </div>
             <div className="flex max-w-full min-w-0 flex-1 flex-col">
               <div className="flex w-full gap-1">
-                <div className="flex w-fit max-w-[60%] items-center gap-1 overflow-hidden">
+                <div
+                  className="flex w-fit max-w-[60%] items-center gap-1 overflow-hidden hover:underline hover:decoration-solid"
+                  onClick={(e) => {
+                    navigate(`/${content.creator.userName}/${content.userId}`);
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
                   <p className="truncate">{content.creator.userName}</p>
                 </div>
                 <div className="flex min-w-0 flex-1 items-center justify-between gap-1">
                   <div className="flex">
-                    <p className="text-sm text-[#56595d]">
+                    <p
+                      className="text-sm text-[#56595d] hover:underline hover:decoration-solid"
+                      onClick={(e) => {
+                        navigate(
+                          `/${content.creator.userName}/${content.userId}`,
+                        );
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                    >
                       @{content.creator.displayName}
                     </p>
                     <p className="text-sm text-[#56595d]">
@@ -157,8 +243,8 @@ export default function Post({ content, setPosts, index }) {
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 -960 960 960"
-                          fill="#56595d"
-                          className="h-5 w-5 cursor-pointer"
+                          fill="currentColor"
+                          className="h-8 w-8 cursor-pointer rounded-full p-2 text-[#56595d] hover:bg-[#0e171f] hover:text-blue-400"
                         >
                           <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
                         </svg>
@@ -168,7 +254,9 @@ export default function Post({ content, setPosts, index }) {
                           className="cursor-pointer text-sm"
                           onClick={() => handleFollow()}
                         >
-                          Follow{" "}
+                          {!content.creator.hasBeenfollowed
+                            ? "Follow"
+                            : "Unfollow"}
                           <span className="text-[#56595d]">
                             @{content.creator.displayName}
                           </span>
@@ -187,19 +275,17 @@ export default function Post({ content, setPosts, index }) {
                   />
                 )}
               </div>
-              <div
-                className="mt-1 flex w-full items-center justify-start"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }}
-              >
+              <div className="mt-1 flex w-full items-center justify-start">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
                       <div
                         className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#0e171f] hover:text-blue-400"
-                        onClick={() => setReply(content.id)}
+                        onClick={(e) => {
+                          setReply(content.id);
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
                       >
                         <MessageCircle className="h-4 w-4" />
                         <p className="text-sm">{content.commentsCount}</p>
@@ -215,7 +301,11 @@ export default function Post({ content, setPosts, index }) {
                     <TooltipTrigger>
                       <div
                         className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
-                        onClick={() => handleLike()}
+                        onClick={(e) => {
+                          handleLike();
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }}
                       >
                         {content.hasLiked ? (
                           <svg
