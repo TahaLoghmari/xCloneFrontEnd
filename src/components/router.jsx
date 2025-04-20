@@ -7,6 +7,7 @@ import Authentication from "./Authentication";
 import PostPage from "./PostPage";
 import CommentPage from "./CommentPage";
 import Profile from "./Profile";
+import Notifications from "./Notifications";
 
 let router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ let router = createBrowserRouter([
       {
         path: ":userName/:id",
         element: <Profile />,
+      },
+      {
+        path: "notifications",
+        element: <Notifications />,
       },
     ],
   },

@@ -162,7 +162,10 @@ export default function CommentPage() {
   if (loading)
     return (
       <>
-        <div style={{ filter: "brightness(0) invert(1)" }}>
+        <div
+          className="flex w-full justify-center py-4 pb-0"
+          style={{ filter: "brightness(0) invert(1)" }}
+        >
           <Lottie animationData={LoadingScreen} loop={true} />
         </div>
       </>

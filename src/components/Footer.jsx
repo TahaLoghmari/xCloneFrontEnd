@@ -49,7 +49,14 @@ export default function Footer({}) {
             </svg>
             <p className="hidden text-xl 2xl:block">Home</p>
           </div>
-          <div className="flex cursor-pointer items-center gap-4 2xl:rounded-full 2xl:py-4 2xl:pr-7 2xl:pl-2 2xl:hover:bg-[#181818]">
+          <div
+            className="flex cursor-pointer items-center gap-4 2xl:rounded-full 2xl:py-4 2xl:pr-7 2xl:pl-2 2xl:hover:bg-[#181818]"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate("/notifications");
+            }}
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 -960 960 960"
@@ -110,7 +117,10 @@ export default function Footer({}) {
           </PopoverTrigger>
           <PopoverContent className="border-gray-700 shadow-2xl">
             <div className="flex flex-col gap-3">
-              <div className="hover:bg-secondary cursor-pointer rounded-sm p-3">
+              <div
+                className="hover:bg-secondary cursor-pointer rounded-sm p-3"
+                onClick={() => handleLogout()}
+              >
                 <p className="font-semibold">Add an existing account</p>
               </div>
 

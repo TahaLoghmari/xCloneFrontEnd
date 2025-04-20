@@ -1,11 +1,13 @@
 import { API_BASE_URL } from "@/lib/api";
 import { useParams } from "react-router-dom";
-import { useEffect, useState, useContext, use } from "react";
+import { useEffect, useState, useContext } from "react";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { States } from "./App";
 import Post from "./Post";
+import Lottie from "lottie-react";
+import LoadingScreen from "../assets/LoadingScreen.json";
 import {
   Tooltip,
   TooltipContent,
@@ -26,6 +28,8 @@ export default function Profile({}) {
   const [user, setUser] = useState(false);
   const token = localStorage.getItem("token");
   const [loadingComments, setLoadingComments] = useState(false);
+  const [loadingPostComments, setLoadingPostComments] = useState(false);
+
   useEffect(() => {
     fetch(`${API_BASE_URL}/User/${id}/${Auth.id}`, {
       headers: {
@@ -63,6 +67,50 @@ export default function Profile({}) {
         setLoading(false);
       });
   }, [id, Auth.id]);
+
+  useEffect(() => {
+    if (!userComments || userComments.length === 0 || !user) return;
+    const postIdsToFetch = userComments
+      .filter((post) => !postCommentsMap[post.id])
+      .map((post) => post.id);
+
+    if (postIdsToFetch.length === 0) return;
+
+    setLoadingPostComments(true);
+
+    const fetchPromises = postIdsToFetch.map((postId) =>
+      fetch(
+        `${API_BASE_URL}/Comment/user/${user.id}/post/${postId}/${Auth.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+        .then((res) => {
+          if (!res.ok)
+            throw new Error(`Failed to fetch comments for post ${postId}`);
+          return res.json();
+        })
+        .then((data) => ({ postId, data })),
+    );
+
+    Promise.all(fetchPromises)
+      .then((results) => {
+        const newCommentsMap = { ...postCommentsMap };
+        results.forEach(({ postId, data }) => {
+          newCommentsMap[postId] = data;
+        });
+        setPostCommentsMap(newCommentsMap);
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+      .finally(() => {
+        setLoadingPostComments(false);
+      });
+  }, [userComments, user]);
+
   const fetchComments = () => {
     if (userComments) return;
     setLoadingComments(true);
@@ -90,6 +138,7 @@ export default function Profile({}) {
         setLoadingComments(false);
       });
   };
+
   const formatJoinDate = (dateString) => {
     if (!dateString) return "";
 
@@ -101,7 +150,7 @@ export default function Profile({}) {
   };
   const fetchPostComments = (postId) => {
     if (postCommentsMap[postId]) return;
-
+    setLoadingPostComments(true);
     fetch(`${API_BASE_URL}/Comment/user/${user.id}/post/${postId}/${Auth.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -119,11 +168,14 @@ export default function Profile({}) {
           ...prev,
           [postId]: data,
         }));
+        setLoadingPostComments(false);
       })
       .catch((error) => {
+        setLoadingPostComments(false);
         console.log(error);
       });
   };
+
   const formatTimeAgo = (dateString) => {
     const now = new Date();
     const postDate = new Date(dateString);
@@ -148,8 +200,16 @@ export default function Profile({}) {
       }
     }
   };
-  console.log(user);
-  if (loading) return <div>loading...</div>;
+
+  if (loading)
+    return (
+      <div
+        className="flex w-full justify-center py-4 pb-0"
+        style={{ filter: "brightness(0) invert(1)" }}
+      >
+        <Lottie animationData={LoadingScreen} loop={true} />
+      </div>
+    );
   if (!loading && user && userPosts) {
     document.title = `${user.userName}`;
     return (
@@ -228,8 +288,16 @@ export default function Profile({}) {
             ) : (
               userComments &&
               userComments.map((userPost, index) => {
-                fetchPostComments(userPost.id);
-
+                if (loadingPostComments)
+                  return (
+                    <div
+                      key={index}
+                      className="flex w-full justify-center py-4 pb-0"
+                      style={{ filter: "brightness(0) invert(1)" }}
+                    >
+                      <Lottie animationData={LoadingScreen} loop={true} />
+                    </div>
+                  );
                 return (
                   <div key={index}>
                     <Post
@@ -239,99 +307,106 @@ export default function Profile({}) {
                     />
                     {postCommentsMap[userPost.id]?.length > 0 && (
                       <div className="ml-10 border-l">
-                        {postCommentsMap[userPost.id].map((comment) => (
-                          <div className="flex w-full cursor-pointer justify-center border-b pt-4">
-                            <div className="flex w-[95%]">
-                              <div className="flex w-13 flex-col">
-                                <Avatar className="h-auto w-10">
-                                  <AvatarImage src={comment.creator.imageUrl} />
-                                  <AvatarFallback>CN</AvatarFallback>
-                                </Avatar>
-                              </div>
-                              <div className="flex max-w-full min-w-0 flex-1 flex-col">
-                                <div className="flex w-full gap-1">
-                                  <div className="flex w-fit max-w-[60%] items-center gap-1 overflow-hidden">
-                                    <p className="truncate">
-                                      {comment.creator.userName}
-                                    </p>
-                                  </div>
-                                  <div className="flex min-w-0 flex-1 items-center justify-between gap-1">
-                                    <div className="flex">
-                                      <p className="text-sm text-[#56595d]">
-                                        @{comment.creator.displayName}
-                                      </p>
-                                      <p className="text-sm text-[#56595d]">
-                                        . {formatTimeAgo(comment.createdAt)}
+                        {postCommentsMap[userPost.id].map(
+                          (comment, commentIndex) => (
+                            <div
+                              key={commentIndex}
+                              className="flex w-full cursor-pointer justify-center border-b pt-4"
+                            >
+                              <div className="flex w-[95%]">
+                                <div className="flex w-13 flex-col">
+                                  <Avatar className="h-auto w-10">
+                                    <AvatarImage
+                                      src={comment.creator.imageUrl}
+                                    />
+                                    <AvatarFallback>CN</AvatarFallback>
+                                  </Avatar>
+                                </div>
+                                <div className="flex max-w-full min-w-0 flex-1 flex-col">
+                                  <div className="flex w-full gap-1">
+                                    <div className="flex w-fit max-w-[60%] items-center gap-1 overflow-hidden">
+                                      <p className="truncate">
+                                        {comment.creator.userName}
                                       </p>
                                     </div>
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      viewBox="0 -960 960 960"
-                                      fill="#56595d"
-                                      className="h-5 w-5"
-                                    >
-                                      <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
-                                    </svg>
+                                    <div className="flex min-w-0 flex-1 items-center justify-between gap-1">
+                                      <div className="flex">
+                                        <p className="text-sm text-[#56595d]">
+                                          @{comment.creator.displayName}
+                                        </p>
+                                        <p className="text-sm text-[#56595d]">
+                                          . {formatTimeAgo(comment.createdAt)}
+                                        </p>
+                                      </div>
+                                      <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 -960 960 960"
+                                        fill="#56595d"
+                                        className="h-5 w-5"
+                                      >
+                                        <path d="M240-400q-33 0-56.5-23.5T160-480q0-33 23.5-56.5T240-560q33 0 56.5 23.5T320-480q0 33-23.5 56.5T240-400Zm240 0q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400Zm240 0q-33 0-56.5-23.5T640-480q0-33 23.5-56.5T720-560q33 0 56.5 23.5T800-480q0 33-23.5 56.5T720-400Z" />
+                                      </svg>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="w-full overflow-hidden">
-                                  <p className="w-full">{comment.content}</p>
-                                </div>
-                                <div
-                                  className="mt-1 flex w-full items-center gap-1"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                  }}
-                                >
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger>
-                                        <div
-                                          className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
-                                          onClick={() => handleLike()}
-                                        >
-                                          {comment.hasLiked ? (
-                                            <svg
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              viewBox="0 -960 960 960"
-                                              fill="#da317d"
-                                              className="h-4 w-4"
-                                            >
-                                              <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z" />
-                                            </svg>
-                                          ) : (
-                                            <svg
-                                              xmlns="http://www.w3.org/2000/svg"
-                                              viewBox="0 -960 960 960"
-                                              fill="currentColor"
-                                              className="h-4 w-4"
-                                            >
-                                              <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z" />
-                                            </svg>
-                                          )}
-
-                                          <p
-                                            className={`text-sm ${comment.hasLiked && "text-[#da317d]"}`}
+                                  <div className="w-full overflow-hidden">
+                                    <p className="w-full">{comment.content}</p>
+                                  </div>
+                                  <div
+                                    className="mt-1 flex w-full items-center gap-1"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                    }}
+                                  >
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger>
+                                          <div
+                                            className="flex cursor-pointer items-center gap-1 rounded-full p-3 text-[#72767b] transition hover:bg-[#1e0c14] hover:text-[#da317d]"
+                                            onClick={() => handleLike()}
                                           >
-                                            {comment.likesCount}
-                                          </p>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="bottom">
-                                        {comment.hasLiked ? (
-                                          <p>Unlike</p>
-                                        ) : (
-                                          <p>Like</p>
-                                        )}
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
+                                            {comment.hasLiked ? (
+                                              <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 -960 960 960"
+                                                fill="#da317d"
+                                                className="h-4 w-4"
+                                              >
+                                                <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z" />
+                                              </svg>
+                                            ) : (
+                                              <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 -960 960 960"
+                                                fill="currentColor"
+                                                className="h-4 w-4"
+                                              >
+                                                <path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z" />
+                                              </svg>
+                                            )}
+
+                                            <p
+                                              className={`text-sm ${comment.hasLiked && "text-[#da317d]"}`}
+                                            >
+                                              {comment.likesCount}
+                                            </p>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="bottom">
+                                          {comment.hasLiked ? (
+                                            <p>Unlike</p>
+                                          ) : (
+                                            <p>Like</p>
+                                          )}
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ),
+                        )}
                       </div>
                     )}
                   </div>
@@ -343,4 +418,5 @@ export default function Profile({}) {
       </div>
     );
   }
+  return null;
 }

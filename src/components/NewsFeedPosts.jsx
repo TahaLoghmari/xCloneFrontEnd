@@ -4,8 +4,10 @@ import Lottie from "lottie-react";
 import LoadingScreen from "../assets/LoadingScreen.json";
 import Post from "./Post";
 import { States } from "./App";
+import { NewsFeedStates } from "./NewsFeed";
 
 export default function NewsFeedPosts() {
+  const { forYou, following } = useContext(NewsFeedStates);
   const { Auth } = useContext(States);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(false);
@@ -13,28 +15,50 @@ export default function NewsFeedPosts() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API_BASE_URL}/Post/allPosts/${Auth.id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok)
-          return res.text().then((t) => {
-            setAuthError(t);
-            throw new Error(t);
+    forYou
+      ? fetch(`${API_BASE_URL}/Post/allPosts/${Auth.id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+          .then((res) => {
+            if (!res.ok)
+              return res.text().then((t) => {
+                setAuthError(t);
+                throw new Error(t);
+              });
+            return res.json();
+          })
+          .then((data) => {
+            setPosts(data);
+            setLoading(false);
+          })
+          .catch((error) => {
+            setLoading(false);
+            setAuthError(error);
+          })
+      : fetch(`${API_BASE_URL}/Post/followingsPosts/${Auth.id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+          .then((res) => {
+            if (!res.ok)
+              return res.text().then((t) => {
+                setAuthError(t);
+                throw new Error(t);
+              });
+            return res.json();
+          })
+          .then((data) => {
+            setPosts(data);
+            setLoading(false);
+          })
+          .catch((error) => {
+            setLoading(false);
+            setAuthError(error);
           });
-        return res.json();
-      })
-      .then((data) => {
-        setPosts(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        setLoading(false);
-        setAuthError(error);
-      });
-  }, []);
+  }, [following, forYou]);
   if (loading)
     return (
       <div className="flex h-full w-full flex-col items-center justify-center">
