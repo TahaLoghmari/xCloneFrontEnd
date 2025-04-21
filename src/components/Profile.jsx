@@ -14,9 +14,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRef } from "react";
 
 export default function Profile({}) {
-  const { Auth } = useContext(States);
+  const { Auth, setAuth } = useContext(States);
   const navigate = useNavigate();
   const [posts, setPosts] = useState(true);
   const [comments, setComments] = useState(false);
@@ -29,7 +30,14 @@ export default function Profile({}) {
   const token = localStorage.getItem("token");
   const [loadingComments, setLoadingComments] = useState(false);
   const [loadingPostComments, setLoadingPostComments] = useState(false);
-
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const profileImageInputRef = useRef(null);
+  const handleProfileImageClick = () => {
+    if (user && user.id === Auth.id) {
+      profileImageInputRef.current?.click();
+    }
+  };
   useEffect(() => {
     fetch(`${API_BASE_URL}/User/${id}/${Auth.id}`, {
       headers: {
@@ -200,7 +208,76 @@ export default function Profile({}) {
       }
     }
   };
+  const handleProfileImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    try {
+      setUploadingImage(true);
+      setUploadError("");
+      const imageData = new FormData();
+      imageData.append("file", file);
+
+      const uploadResponse = await fetch(`${API_BASE_URL}/Upload/image`, {
+        method: "POST",
+        body: imageData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.text();
+        console.error("Image upload failed:", errorData);
+        throw new Error(
+          `Failed to upload image: ${uploadResponse.status} ${uploadResponse.statusText}`,
+        );
+      }
+
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResult || !uploadResult.url) {
+        console.error("Invalid upload response:", uploadResult);
+        throw new Error("Image upload response missing URL");
+      }
+      const updateResponse = await fetch(
+        `${API_BASE_URL}/User/${user.id}/${Auth.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            imageUrl: uploadResult.url,
+            userName: user.userName,
+          }),
+        },
+      );
+
+      if (!updateResponse.ok) {
+        throw new Error("Failed to update profile image");
+      }
+      setUser((prev) => ({
+        ...prev,
+        imageUrl: uploadResult.url,
+      }));
+      if (user.id === Auth.id) {
+        setAuth((prevAuth) => ({
+          ...prevAuth,
+          imageUrl: uploadResult.url,
+        }));
+      }
+    } catch (error) {
+      console.error("Profile image update failed:", error);
+      setUploadError(error.message || "Failed to update profile image");
+    } finally {
+      setUploadingImage(false);
+      if (profileImageInputRef.current) {
+        profileImageInputRef.current.value = "";
+      }
+    }
+  };
   if (loading)
     return (
       <div
@@ -214,9 +291,7 @@ export default function Profile({}) {
     document.title = `${user.userName}`;
     return (
       <div className="flex w-full flex-col items-center">
-        {/* 95% of the screen centered */}
         <div className="w-[90%]">
-          {/* header */}
           <div className="flex gap-8 py-4">
             <ArrowLeft
               className="h-5 w-5 cursor-pointer"
@@ -226,10 +301,39 @@ export default function Profile({}) {
           </div>
           {/* content */}
           <div className="flex flex-col gap-2">
-            <Avatar className="h-13 w-13">
-              <AvatarImage src={user?.imageUrl} />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar
+                className={`h-13 w-13 ${user?.id === Auth.id ? "cursor-pointer hover:opacity-80" : ""}`}
+                onClick={handleProfileImageClick}
+              >
+                <AvatarImage src={user?.imageUrl} />
+                <AvatarFallback>{uploadingImage ? "..." : "CN"}</AvatarFallback>
+              </Avatar>
+
+              {user?.id === Auth.id && (
+                <>
+                  <input
+                    type="file"
+                    ref={profileImageInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleProfileImageChange}
+                  />
+                  {user?.id === Auth.id && !uploadingImage && (
+                    <div className="absolute right-0 bottom-0 rounded-full bg-blue-500 p-1 text-white">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
             <div>
               <p className="text-lg font-bold">{user.userName}</p>
               <p className="text-sm text-[#56595d]">@{user.displayName}</p>

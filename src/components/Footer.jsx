@@ -11,9 +11,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-export default function Footer({}) {
+export default function Footer() {
   const navigate = useNavigate();
-  const { Auth } = useContext(States);
+  const { Auth, setAddPost } = useContext(States);
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/auth");
@@ -84,7 +84,14 @@ export default function Footer({}) {
               <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
             </svg>
           </div>
-          <Button className="hidden h-15 w-full rounded-full font-extrabold 2xl:inline-block">
+          <Button
+            className="hidden h-15 w-full cursor-pointer rounded-full font-extrabold 2xl:inline-block"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setAddPost(true);
+            }}
+          >
             Post
           </Button>
         </div>
@@ -134,7 +141,14 @@ export default function Footer({}) {
           </PopoverContent>
         </Popover>
       </div>
-      <div className="bg-primary fixed right-5 bottom-20 cursor-pointer rounded-full p-3 sm:hidden">
+      <div
+        className="bg-primary fixed right-5 bottom-20 cursor-pointer rounded-full p-3 sm:hidden"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setAddPost(true);
+        }}
+      >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 -960 960 960"

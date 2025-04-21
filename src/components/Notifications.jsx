@@ -144,7 +144,7 @@ export default function Notifications() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl pt-4">
+    <div className="w-full max-w-2xl pt-4">
       <div className="mb-4 flex items-center justify-between px-4">
         <h1 className="text-xl font-bold">Notifications</h1>
         {notifications && notifications.length > 0 && (

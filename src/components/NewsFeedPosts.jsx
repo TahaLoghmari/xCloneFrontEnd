@@ -7,11 +7,9 @@ import { States } from "./App";
 import { NewsFeedStates } from "./NewsFeed";
 
 export default function NewsFeedPosts() {
-  const { forYou, following } = useContext(NewsFeedStates);
-  const { Auth } = useContext(States);
-  const [loading, setLoading] = useState(true);
+  const { forYou, following, loading, setLoading } = useContext(NewsFeedStates);
+  const { Auth, posts, setPosts } = useContext(States);
   const [authError, setAuthError] = useState(false);
-  const [posts, setPosts] = useState(null);
 
   useEffect(() => {
     setLoading(true);

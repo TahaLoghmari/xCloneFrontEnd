@@ -6,12 +6,15 @@ import Footer from "./Footer";
 import SearchNewsFeed from "./SearchNewsFeed";
 import { API_BASE_URL } from "@/lib/api";
 import { jwtDecode } from "jwt-decode";
+import NewsFeedAddPost from "./NewsFeedAddPost";
 
 export const States = createContext({ Auth: "", setAuth: () => {} });
 export default function App() {
   const navigate = useNavigate();
   const [Auth, setAuth] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [addPost, setAddPost] = useState(false);
+  const [posts, setPosts] = useState(null);
   useEffect(() => {
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -87,14 +90,20 @@ export default function App() {
     document.title = "Home";
     return (
       <ThemeProvider defaultTheme="dark">
-        <States.Provider value={{ Auth, setAuth }}>
+        <States.Provider value={{ Auth, setAuth, setAddPost, posts, setPosts }}>
           <div className="flex w-full flex-col sm:flex-row md:w-[690px] xl:w-[1000px] xl:flex-row xl:gap-4 2xl:w-[1280px] 2xl:gap-6">
-            {/* By default this is going to be the news feed */}
             <div className="2sm:ml-20 semixl:w-[63%] flex w-full flex-col sm:ml-17 md:border-r xl:w-[67%] 2xl:ml-70">
               <Outlet />
             </div>
             <SearchNewsFeed />
-            <Footer />
+            <Footer setAddPost={setAddPost} />
+            {addPost && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#262d34]/30">
+                <div className="bg-background flex h-full w-full justify-center md:h-[360px] md:w-[600px] md:rounded-lg">
+                  <NewsFeedAddPost option="true" setAddPost={setAddPost} />
+                </div>
+              </div>
+            )}
           </div>
         </States.Provider>
       </ThemeProvider>
